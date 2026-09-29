@@ -49,6 +49,13 @@
       background: #cbd5e1;
       border-radius: 9999px;
     }
+    .tab-view {
+      animation: tabFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
     @media print {
       header, nav, #print-sheet-btn, #sound-btn, button, .no-print, #report-modal-close, #report-modal-actions {
         display: none !important;
@@ -124,19 +131,19 @@
 
       <!-- Navigation Tabs -->
       <nav class="w-full sm:w-auto flex items-center space-x-1 sm:space-x-2 text-sm overflow-x-auto pb-1 sm:pb-0 border-t sm:border-t-0 border-indigo-800/60 pt-2 sm:pt-0">
-        <button onclick="switchTab('anchor')" id="tab-anchor" class="px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 bg-indigo-800 text-white border border-indigo-700">
+        <button onclick="switchTab('anchor')" id="tab-anchor" class="px-3 py-1.5 rounded-lg font-semibold transition-colors duration-150 flex items-center gap-1.5 bg-indigo-800 text-white border border-indigo-700 shadow-sm">
           <i class="fa-solid fa-compass"></i>
           <span>Rule Matrix</span>
         </button>
-        <button onclick="switchTab('match')" id="tab-match" class="px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60">
+        <button onclick="switchTab('match')" id="tab-match" class="px-3 py-1.5 rounded-lg font-semibold transition-colors duration-150 flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60 border border-transparent">
           <i class="fa-solid fa-scale-balanced"></i>
           <span>Center & Spread</span>
         </button>
-        <button onclick="switchTab('graphAudit')" id="tab-graphAudit" class="px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60">
+        <button onclick="switchTab('graphAudit')" id="tab-graphAudit" class="px-3 py-1.5 rounded-lg font-semibold transition-colors duration-150 flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60 border border-transparent">
           <i class="fa-solid fa-pen-ruler"></i>
           <span>Execution Details</span>
         </button>
-        <button onclick="switchTab('quiz')" id="tab-quiz" class="px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60">
+        <button onclick="switchTab('quiz')" id="tab-quiz" class="px-3 py-1.5 rounded-lg font-semibold transition-colors duration-150 flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60 border border-transparent">
           <i class="fa-solid fa-stopwatch"></i>
           <span>Paced Mini-Quiz</span>
         </button>
@@ -144,12 +151,12 @@
     </div>
   </header>
 
-  <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6">
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 min-h-[680px]">
 
     <!-- ========================================== -->
     <!-- TAB 1: THE CORE RULE MATRIX & CHEAT SHEET  -->
     <!-- ========================================== -->
-    <section id="view-anchor" class="space-y-6">
+    <section id="view-anchor" class="space-y-6 tab-view">
       <!-- Target Feedback Banner -->
       <div class="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-l-4 border-amber-500 p-4 rounded-r-xl">
         <div class="flex items-start gap-3">
@@ -817,16 +824,25 @@
         const btn = document.getElementById(`tab-${t}`);
         if (t === tabId) {
           view.classList.remove('hidden');
-          btn.className = "px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 bg-indigo-800 text-white border border-indigo-700";
+          view.classList.remove('tab-view');
+          void view.offsetWidth; // trigger reflow for smooth animation
+          view.classList.add('tab-view');
+
+          btn.classList.add('bg-indigo-800', 'text-white', 'border-indigo-700', 'shadow-sm');
+          btn.classList.remove('text-indigo-200', 'hover:bg-indigo-800/60', 'border-transparent');
         } else {
           view.classList.add('hidden');
-          btn.className = "px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60";
+          view.classList.remove('tab-view');
+
+          btn.classList.remove('bg-indigo-800', 'text-white', 'border-indigo-700', 'shadow-sm');
+          btn.classList.add('text-indigo-200', 'hover:bg-indigo-800/60', 'border-transparent');
         }
       });
-      if (tabId === 'match') {
-        renderMatchmakerProblem();
-      } else if (tabId === 'graphAudit') {
-        renderGraphAuditScenario();
+      // Gently repaint canvas without resetting user state or re-randomizing problem
+      if (tabId === 'match' && currentMatchActiveData) {
+        requestAnimationFrame(() => drawMatchCanvas(currentMatchActiveData));
+      } else if (tabId === 'graphAudit' && currentAuditActiveData) {
+        requestAnimationFrame(() => drawAuditCanvas(currentAuditActiveData));
       }
     }
 
