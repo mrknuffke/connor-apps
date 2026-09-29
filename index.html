@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>IM1 StatMaster: 9th Grade One-Variable Statistics Trainer</title>
+  <meta name="theme-color" content="#312e81">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="StatMaster">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .highlight-mark {
+      background-color: #fef08a;
+      color: #854d0e;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .cover-shield {
+      background: repeating-linear-gradient(
+        45deg,
+        #f8fafc,
+        #f8fafc 10px,
+        #f1f5f9 10px,
+        #f1f5f9 20px
+      );
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    @media print {
+      header, nav, #print-sheet-btn, #sound-btn, button, .no-print {
+        display: none !important;
+      }
+      body {
+        background: white !important;
+        color: black !important;
+      }
+      #view-anchor {
+        display: block !important;
+      }
+      #view-match, #view-graphAudit, #view-quiz {
+        display: none !important;
+      }
+      .shadow-sm, .shadow-md, .shadow-xl {
+        box-shadow: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <header class="bg-indigo-900 text-white shadow-md sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-indigo-500 flex items-center justify-center font-black text-xl shadow-inner">
+          <i class="fa-solid fa-chart-simple text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight flex items-center gap-2">
+            IM1 StatMaster
+            <span class="text-xs bg-amber-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">Test Reassessment Prep</span>
+          </h1>
+          <p class="text-xs text-indigo-200">Integrated Math 1 • Unit 1: One-Variable Statistics</p>
+        </div>
+      </div>
+
+      <!-- Quick Actions & Stats -->
+      <div class="flex items-center gap-2">
+        <span id="mastery-pill" class="hidden sm:flex text-xs bg-indigo-950/70 text-indigo-200 border border-indigo-700/60 px-2.5 py-1 rounded-full items-center gap-1.5 font-medium">
+          <i class="fa-solid fa-trophy text-amber-400"></i>
+          <span id="mastery-text">Best Quiz: None yet</span>
+        </span>
+        <button id="sound-btn" onclick="toggleSound()" title="Toggle Sound FX" class="w-8 h-8 rounded-lg bg-indigo-800/80 hover:bg-indigo-700 border border-indigo-700 flex items-center justify-center text-xs transition-colors">
+          <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+        </button>
+        <button id="print-sheet-btn" onclick="printStudySheet()" title="Print Study Binder Sheet" class="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-800/80 hover:bg-indigo-700 border border-indigo-700 transition-colors">
+          <i class="fa-solid fa-print"></i>
+          <span>Print Sheet</span>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="w-full sm:w-auto flex items-center space-x-1 sm:space-x-2 text-sm overflow-x-auto pb-1 sm:pb-0 border-t sm:border-t-0 border-indigo-800/60 pt-2 sm:pt-0">
+        <button onclick="switchTab('anchor')" id="tab-anchor" class="px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 bg-indigo-800 text-white border border-indigo-700">
+          <i class="fa-solid fa-compass"></i>
+          <span>Rule Matrix</span>
+        </button>
+        <button onclick="switchTab('match')" id="tab-match" class="px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60">
+          <i class="fa-solid fa-scale-balanced"></i>
+          <span>Center & Spread</span>
+        </button>
+        <button onclick="switchTab('graphAudit')" id="tab-graphAudit" class="px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60">
+          <i class="fa-solid fa-pen-ruler"></i>
+          <span>Execution Details</span>
+        </button>
+        <button onclick="switchTab('quiz')" id="tab-quiz" class="px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60">
+          <i class="fa-solid fa-stopwatch"></i>
+          <span>Paced Mini-Quiz</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: THE CORE RULE MATRIX & CHEAT SHEET  -->
+    <!-- ========================================== -->
+    <section id="view-anchor" class="space-y-6">
+      <!-- Target Feedback Banner -->
+      <div class="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-l-4 border-amber-500 p-4 rounded-r-xl">
+        <div class="flex items-start gap-3">
+          <div class="p-2 bg-amber-500 text-white rounded-lg mt-0.5">
+            <i class="fa-solid fa-bullseye"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-amber-950 text-base">Teacher's Focus For Reassessment</h2>
+            <p class="text-sm text-amber-900 mt-0.5">
+              1. Distribution shape dictates summary statistics. 2. Always state whether a statistic measures <strong>Center</strong> or <strong>Variability (Spread)</strong>. 3. Don't lose points on scales, labels, and units!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Core Rule Comparison Card -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Symmetric Case -->
+        <div class="bg-white rounded-2xl p-6 border-2 border-emerald-200 shadow-sm relative overflow-hidden">
+          <div class="absolute -top-3 -right-3 w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-bell text-emerald-400 text-2xl"></i>
+          </div>
+          <div class="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full mb-3 uppercase tracking-wide">
+            Distribution Type A
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+            Symmetric / Bell-Shaped
+          </h3>
+          <p class="text-xs text-slate-500 mt-1">Data is evenly balanced with no severe outliers.</p>
+
+          <div class="mt-5 space-y-4">
+            <div class="p-3.5 bg-emerald-50/70 rounded-xl border border-emerald-200">
+              <span class="text-xs font-bold uppercase text-emerald-700 tracking-wider block">Measure of Center:</span>
+              <div class="flex items-baseline justify-between mt-1">
+                <span class="text-lg font-extrabold text-emerald-950">MEAN (<span class="italic font-serif">x̄</span>)</span>
+                <span class="text-xs bg-white text-emerald-800 px-2 py-0.5 rounded border border-emerald-200 font-semibold">Average of all values</span>
+              </div>
+            </div>
+
+            <div class="p-3.5 bg-emerald-50/70 rounded-xl border border-emerald-200">
+              <span class="text-xs font-bold uppercase text-emerald-700 tracking-wider block">Measure of Variability (Spread):</span>
+              <div class="flex items-baseline justify-between mt-1">
+                <span class="text-lg font-extrabold text-emerald-950">STANDARD DEVIATION (<span class="italic font-serif">s</span>)</span>
+                <span class="text-xs bg-white text-emerald-800 px-2 py-0.5 rounded border border-emerald-200 font-semibold">Typical distance from mean</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <strong class="text-slate-800">Why?</strong> Because there are no extreme outliers to pull or distort the calculations, mean and standard deviation use <em>every single data point</em> to give the most complete picture.
+          </div>
+        </div>
+
+        <!-- Skewed or Outlier Case -->
+        <div class="bg-white rounded-2xl p-6 border-2 border-indigo-200 shadow-sm relative overflow-hidden">
+          <div class="absolute -top-3 -right-3 w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-arrow-trend-up text-indigo-400 text-2xl"></i>
+          </div>
+          <div class="inline-block px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-bold rounded-full mb-3 uppercase tracking-wide">
+            Distribution Type B
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+            Skewed OR Outlier Present
+          </h3>
+          <p class="text-xs text-slate-500 mt-1">Data has a long tail or extreme values that distort totals.</p>
+
+          <div class="mt-5 space-y-4">
+            <div class="p-3.5 bg-indigo-50/70 rounded-xl border border-indigo-200">
+              <span class="text-xs font-bold uppercase text-indigo-700 tracking-wider block">Measure of Center:</span>
+              <div class="flex items-baseline justify-between mt-1">
+                <span class="text-lg font-extrabold text-indigo-950">MEDIAN (Q2)</span>
+                <span class="text-xs bg-white text-indigo-800 px-2 py-0.5 rounded border border-indigo-200 font-semibold">Middle value (50th percentile)</span>
+              </div>
+            </div>
+
+            <div class="p-3.5 bg-indigo-50/70 rounded-xl border border-indigo-200">
+              <span class="text-xs font-bold uppercase text-indigo-700 tracking-wider block">Measure of Variability (Spread):</span>
+              <div class="flex items-baseline justify-between mt-1">
+                <span class="text-lg font-extrabold text-indigo-950">IQR (Interquartile Range)</span>
+                <span class="text-xs bg-white text-indigo-800 px-2 py-0.5 rounded border border-indigo-200 font-semibold">Spread of middle 50% (Q3 - Q1)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <strong class="text-slate-800">Why?</strong> Median and IQR are <strong>resistant</strong> to extreme values. A crazy outlier (like test score 0 or 100) will warp the mean, but will barely budge the median and IQR!
+          </div>
+        </div>
+      </div>
+
+      <!-- Outlier Rule & Calculator Card -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-calculator text-indigo-600"></i>
+            The 1.5 &times; IQR Outlier Boundary Rule
+          </h3>
+          <span class="text-xs bg-indigo-50 text-indigo-700 font-bold px-2.5 py-1 rounded-full border border-indigo-100">
+            Standard IM1 Formula
+          </span>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6 items-start">
+          <div class="space-y-3 text-xs text-slate-600">
+            <p class="leading-relaxed">
+              In 9th grade Integrated Math 1, you can't just "guess" if a number looks too far away. You must prove it using the <strong>1.5 &times; IQR rule</strong>:
+            </p>
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2 font-mono text-[11px]">
+              <div class="flex justify-between items-center text-slate-800">
+                <span>1. Interquartile Range:</span>
+                <span class="font-bold text-indigo-700">IQR = Q3 - Q1</span>
+              </div>
+              <div class="flex justify-between items-center text-slate-800">
+                <span>2. Lower Outlier Fence:</span>
+                <span class="font-bold text-rose-700">Q1 - (1.5 &times; IQR)</span>
+              </div>
+              <div class="flex justify-between items-center text-slate-800">
+                <span>3. Upper Outlier Fence:</span>
+                <span class="font-bold text-rose-700">Q3 + (1.5 &times; IQR)</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500 italic">
+              Any data point less than the Lower Fence or greater than the Upper Fence is an <strong>official outlier</strong> and must be plotted as an isolated dot on a modified box plot!
+            </p>
+          </div>
+
+          <!-- Interactive Calculator -->
+          <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+            <h4 class="font-bold text-xs uppercase text-indigo-950 tracking-wider mb-2.5 flex items-center gap-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i>
+              Interactive Outlier Checker
+            </h4>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Q1 (25th %)</label>
+                <input type="number" id="outlier-q1" value="12" oninput="calcOutlierBounds()" class="w-full text-xs font-mono p-2 bg-white border border-slate-300 rounded-lg outline-none focus:border-indigo-500">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Q3 (75th %)</label>
+                <input type="number" id="outlier-q3" value="24" oninput="calcOutlierBounds()" class="w-full text-xs font-mono p-2 bg-white border border-slate-300 rounded-lg outline-none focus:border-indigo-500">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Test Value (x)</label>
+                <input type="number" id="outlier-test-val" value="45" oninput="calcOutlierBounds()" placeholder="e.g. 45" class="w-full text-xs font-mono p-2 bg-white border border-slate-300 rounded-lg outline-none focus:border-indigo-500">
+              </div>
+            </div>
+            <div id="outlier-calc-output" class="text-xs">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 mb-4">
+          <i class="fa-solid fa-list-check text-indigo-600"></i>
+          The "Never Lose a Free Point" Execution Checklist
+        </h3>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+            <div>
+              <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-black mb-2">1</div>
+              <h4 class="font-bold text-sm text-slate-800">Even Axis Scales</h4>
+              <p class="text-xs text-slate-600 mt-1">Numbers must space by uniform intervals (e.g., 0, 5, 10, 15). Never skip numbers just because there's no data!</p>
+            </div>
+            <div class="mt-3 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-1 rounded">✓ Step by equal delta</div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+            <div>
+              <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-black mb-2">2</div>
+              <h4 class="font-bold text-sm text-slate-800">Units on Every Axis</h4>
+              <p class="text-xs text-slate-600 mt-1">Writing "Time" is half credit. Writing "Time (minutes)" or "Distance (miles)" secures the full credit.</p>
+            </div>
+            <div class="mt-3 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-1 rounded">✓ Label + Parentheses Units</div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+            <div>
+              <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-black mb-2">3</div>
+              <h4 class="font-bold text-sm text-slate-800">Center vs. Spread Word</h4>
+              <p class="text-xs text-slate-600 mt-1">Always write the explicit category: "IQR is the measure of <em>variability</em>", "Median is the measure of <em>center</em>".</p>
+            </div>
+            <div class="mt-3 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-1 rounded">✓ Use IM vocabulary words</div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+            <div>
+              <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-black mb-2">4</div>
+              <h4 class="font-bold text-sm text-slate-800">Multi-Part Audit</h4>
+              <p class="text-xs text-slate-600 mt-1">High-achieving rushers miss sub-parts. Underline "And", "Explain", "State units", and sub-bullet items.</p>
+            </div>
+            <div class="mt-3 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-1 rounded">✓ Highlight all action verbs</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- TAB 2: CENTER & VARIABILITY MATCHMAKER + EXPLANATION WRITER    -->
+    <!-- ============================================================== -->
+    <section id="view-match" class="space-y-6 hidden">
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-arrows-split-up-and-left text-indigo-600"></i>
+              Distribution Shape &amp; Statistic Matchmaker
+            </h2>
+            <p class="text-sm text-slate-500">Analyze the plot shape, select the appropriate statistics, and formulate an Illustrative Mathematics explanation.</p>
+          </div>
+          <button onclick="nextMatchmakerProblem()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-all flex items-center gap-2 shadow-sm">
+            <i class="fa-solid fa-shuffle"></i>
+            <span>New Distribution Scenario</span>
+          </button>
+        </div>
+
+        <!-- Problem Container -->
+        <div class="mt-6 grid lg:grid-cols-12 gap-6 items-start">
+          <!-- Canvas Plot Display -->
+          <div class="lg:col-span-6 bg-slate-50 rounded-2xl p-4 border border-slate-200 flex flex-col items-center">
+            <div class="w-full flex justify-between items-center text-xs font-semibold text-slate-600 mb-2 px-1">
+              <span id="match-context-tag" class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded">Context: Class Data</span>
+              <span id="match-difficulty-tag" class="text-indigo-600">Scenario #<span id="match-index">1</span></span>
+            </div>
+            <div class="w-full bg-white rounded-xl p-3 border border-slate-200 shadow-inner flex flex-col items-center">
+              <h4 id="match-plot-title" class="text-sm font-bold text-slate-800 text-center mb-1">Student Commute Times (minutes)</h4>
+              <canvas id="matchCanvas" width="480" height="230" class="w-full max-w-[480px] h-[210px]"></canvas>
+            </div>
+            <p id="match-plot-desc" class="text-xs text-slate-600 mt-3 text-center italic">
+              Examine the shape, tails, and presence of extreme data points.
+            </p>
+          </div>
+
+          <!-- Interactive Choice Column -->
+          <div class="lg:col-span-6 space-y-4">
+            <!-- Step 1: Shape Identification -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">
+                1. What is the distribution shape?
+              </label>
+              <div class="grid grid-cols-2 gap-2" id="match-shape-options">
+                <button type="button" id="btn-shape-symmetric" onclick="selectShape('symmetric')" class="shape-btn p-2.5 rounded-lg border text-sm font-semibold text-left transition-all bg-white border-slate-200 hover:border-indigo-400">
+                  <span class="block font-bold">Symmetric</span>
+                  <span class="text-[11px] text-slate-500 font-normal">Roughly bell-shaped, balanced</span>
+                </button>
+                <button type="button" id="btn-shape-skewed" onclick="selectShape('skewed')" class="shape-btn p-2.5 rounded-lg border text-sm font-semibold text-left transition-all bg-white border-slate-200 hover:border-indigo-400">
+                  <span class="block font-bold">Skewed / Outlier</span>
+                  <span class="text-[11px] text-slate-500 font-normal">Long tail or isolated point</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Step 2: Measure of Center Selection -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">
+                2. Which Measure of Center should we use?
+              </label>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" onclick="selectStat('center', 'mean')" id="btn-center-mean" class="stat-center-btn p-2.5 rounded-lg border text-sm font-semibold text-left transition-all bg-white border-slate-200 hover:border-indigo-400">
+                  <span class="block font-bold">Mean</span>
+                  <span class="text-[11px] text-slate-500 font-normal">Arithmetic Average</span>
+                </button>
+                <button type="button" onclick="selectStat('center', 'median')" id="btn-center-median" class="stat-center-btn p-2.5 rounded-lg border text-sm font-semibold text-left transition-all bg-white border-slate-200 hover:border-indigo-400">
+                  <span class="block font-bold">Median</span>
+                  <span class="text-[11px] text-slate-500 font-normal">Middle value (Resistant)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Step 3: Measure of Variability Selection -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">
+                3. Which Measure of Variability (Spread) should we use?
+              </label>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" onclick="selectStat('spread', 'sd')" id="btn-spread-sd" class="stat-spread-btn p-2.5 rounded-lg border text-sm font-semibold text-left transition-all bg-white border-slate-200 hover:border-indigo-400">
+                  <span class="block font-bold">Standard Deviation</span>
+                  <span class="text-[11px] text-slate-500 font-normal">Spread around mean</span>
+                </button>
+                <button type="button" onclick="selectStat('spread', 'iqr')" id="btn-spread-iqr" class="stat-spread-btn p-2.5 rounded-lg border text-sm font-semibold text-left transition-all bg-white border-slate-200 hover:border-indigo-400">
+                  <span class="block font-bold">IQR (Interquartile Range)</span>
+                  <span class="text-[11px] text-slate-500 font-normal">Spread of middle 50%</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Explanation Builder (Addressing the teacher's comment: "make sure to explicitly name whether a statistic is center or variability") -->
+            <div class="bg-indigo-50/60 p-4 rounded-xl border border-indigo-200">
+              <label class="block text-xs font-bold text-indigo-900 uppercase tracking-wide mb-2">
+                4. Teacher's Required Written Justification Sentence:
+              </label>
+              <div id="sentence-preview" class="p-3 bg-white rounded-lg border border-indigo-200 text-xs text-slate-700 leading-relaxed font-mono">
+                Make selections above to construct your test-ready explanation...
+              </div>
+            </div>
+
+            <!-- Submit Check -->
+            <div class="pt-2 flex items-center justify-between">
+              <button onclick="checkMatchmakerAnswer()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2">
+                <i class="fa-solid fa-check-double"></i>
+                <span>Validate My Statistical Reasoning</span>
+              </button>
+            </div>
+
+            <!-- Feedback Area -->
+            <div id="match-feedback" class="hidden p-4 rounded-xl text-sm"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- TAB 3: GRAPHING EXECUTION AUDITOR ("SPOT THE MISSING DETAIL")   -->
+    <!-- ============================================================== -->
+    <section id="view-graphAudit" class="space-y-6 hidden">
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-magnifying-glass-chart text-amber-500"></i>
+              Execution Detail Inspector: "Spot the Lost Points"
+            </h2>
+            <p class="text-sm text-slate-500">The teacher noted: <em>"You understood how to plot data, but missed small execution details like scales, axis labels, and units."</em> Be the teacher and catch the errors!</p>
+          </div>
+          <button onclick="loadGraphAuditScenario()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-all flex items-center gap-2">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span>Load Another Student Sample</span>
+          </button>
+        </div>
+
+        <div class="mt-6 grid lg:grid-cols-12 gap-6">
+          <!-- Graph Under Inspection -->
+          <div class="lg:col-span-7 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+            <div class="flex justify-between items-center mb-2 px-1">
+              <span class="text-xs font-bold text-slate-600 uppercase" id="audit-graph-type">Plot Type: Box Plot</span>
+              <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                <i class="fa-solid fa-triangle-exclamation mr-1"></i> Flaws hidden within!
+              </span>
+            </div>
+
+            <!-- Visual Graph Container -->
+            <div class="bg-white rounded-xl p-4 border border-slate-300 shadow-sm relative overflow-hidden flex flex-col items-center">
+              <div id="audit-title-display" class="font-bold text-slate-800 text-sm mb-1 text-center">
+                Distribution of Backpack Weights
+              </div>
+              <canvas id="auditCanvas" width="500" height="240" class="w-full max-w-[500px] h-[220px]"></canvas>
+              <div id="audit-caption-display" class="text-xs text-slate-500 mt-2 font-mono text-center">
+                Axis inspection area
+              </div>
+            </div>
+
+            <!-- Problem Prompt Context -->
+            <div class="mt-4 p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-700">
+              <span class="font-bold text-slate-900 block mb-1">Original Test Question:</span>
+              <p id="audit-prompt-text">
+                "Construct a box plot for the backpack weights of 15 high school freshmen (measured in pounds). Ensure all labels, units, and 5-number summary features are properly scaled."
+              </p>
+            </div>
+          </div>
+
+          <!-- Checklist for Missing Details -->
+          <div class="lg:col-span-5 space-y-4">
+            <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-200">
+              <h4 class="font-bold text-amber-950 text-sm flex items-center gap-1.5">
+                <i class="fa-solid fa-clipboard-check text-amber-600"></i>
+                Teacher Grade Audit: Check all flaws present
+              </h4>
+              <p class="text-xs text-amber-900/80 mt-1">
+                Inspect the graph carefully. Which critical execution errors did the student make?
+              </p>
+            </div>
+
+            <div class="space-y-2.5" id="audit-checkbox-group">
+              <!-- Dynamically populated checkboxes -->
+            </div>
+
+            <button onclick="evaluateGraphAudit()" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 mt-4">
+              <i class="fa-solid fa-stamp"></i>
+              <span>Grade This Graph</span>
+            </button>
+
+            <div id="audit-feedback-result" class="hidden p-4 rounded-xl text-xs space-y-2"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- TAB 4: PACED MINI-QUIZ WITH "COVER-UP & HIGHLIGHT" HABITS       -->
+    <!-- ============================================================== -->
+    <section id="view-quiz" class="space-y-6 hidden">
+      <!-- Strategy Header with Timer & Habit Tracker -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
+            Action Plan Simulation: 4-Problem Mini-Quiz
+          </span>
+          <h2 class="text-xl font-bold text-slate-900 mt-1 flex items-center gap-2">
+            Pacing &amp; Anti-Rush Test Simulator
+          </h2>
+          <p class="text-xs text-slate-500">Train the teacher's exact rules: <strong>Highlight action words</strong>, <strong>maintain calm pacing</strong>, and <strong>cover-up check</strong> before submitting!</p>
+        </div>
+
+        <!-- Pacing Clock -->
+        <div class="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
+          <div class="text-center">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Exam Pacing Timer</span>
+            <div id="quiz-timer" class="font-mono text-xl font-bold text-slate-800">00:00</div>
+          </div>
+          <div class="h-8 w-px bg-slate-200"></div>
+          <div class="text-right">
+            <span class="text-[10px] uppercase font-bold text-emerald-600 block">Pacing Status</span>
+            <span id="pacing-badge" class="text-xs font-semibold text-slate-600">Careful &amp; Thorough</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quiz Questions Stage -->
+      <div id="quiz-active-container" class="space-y-6">
+        <!-- Question Card -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+          <!-- Question Top Bar -->
+          <div class="flex justify-between items-center pb-3 border-b border-slate-100 text-xs text-slate-500">
+            <span class="font-bold text-indigo-600 text-sm">Question <span id="quiz-q-num">1</span> of 4</span>
+            <span class="bg-amber-100 text-amber-900 px-2.5 py-1 rounded-md font-medium text-[11px] flex items-center gap-1.5">
+              <i class="fa-solid fa-highlighter text-amber-700"></i> Click text in prompt to highlight key instructions!
+            </span>
+          </div>
+
+          <!-- Interactive Highlightable Prompt -->
+          <div class="mt-4 p-4 bg-amber-50/40 rounded-xl border border-amber-200/70">
+            <span class="text-[11px] font-bold uppercase text-amber-800 tracking-wider block mb-1">
+              Prompt (Highlight action verbs and required units to prevent skimming):
+            </span>
+            <div id="quiz-prompt-interactive" class="text-sm text-slate-800 leading-relaxed select-text cursor-pointer">
+              <!-- Text injected by JS with highlightable spans -->
+            </div>
+          </div>
+
+          <!-- Graph/Data display for the question if applicable -->
+          <div id="quiz-graphic-wrap" class="mt-4 hidden p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center">
+            <canvas id="quizCanvas" width="460" height="180" class="w-full max-w-[460px] h-[170px]"></canvas>
+            <div id="quiz-graphic-caption" class="text-xs text-slate-500 font-mono mt-1"></div>
+          </div>
+
+          <!-- Sub-questions inputs -->
+          <div class="mt-6 space-y-4" id="quiz-inputs-wrap">
+            <!-- Dynamically populated parts -->
+          </div>
+
+          <!-- Bottom Navigation -->
+          <div class="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between">
+            <button onclick="prevQuizQuestion()" id="quiz-prev-btn" class="px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-xl text-xs hover:bg-slate-50 disabled:opacity-30 disabled:pointer-events-none">
+              <i class="fa-solid fa-arrow-left mr-1"></i> Previous
+            </button>
+
+            <div class="flex items-center gap-2">
+              <button onclick="nextQuizQuestion()" id="quiz-next-btn" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs shadow-sm">
+                Next Problem <i class="fa-solid fa-arrow-right ml-1"></i>
+              </button>
+              <button onclick="initiateCoverUpCheck()" id="quiz-finish-btn" class="hidden px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Begin "Cover-Up &amp; Double-Check" Audit</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- COVER-UP PROTOCOL MODAL / VIEW (The Teacher's Secret Weapon)    -->
+      <!-- ============================================================== -->
+      <div id="quiz-coverup-container" class="hidden bg-white rounded-2xl p-6 border-2 border-indigo-500 shadow-xl space-y-6">
+        <div class="bg-indigo-900 text-white p-4 rounded-xl flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-indigo-700 flex items-center justify-center text-xl">
+              <i class="fa-solid fa-file-shield text-amber-400"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-base">Teacher Strategy: The Blank Cover-Up Protocol</h3>
+              <p class="text-xs text-indigo-200">"When you think you're finished, cover your answers and re-verify before turning in!"</p>
+            </div>
+          </div>
+          <span class="text-xs bg-amber-400 text-slate-900 font-black px-3 py-1 rounded-full uppercase tracking-wider">
+            Zero Rush Check
+          </span>
+        </div>
+
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+          <h4 class="font-bold text-slate-900 text-sm mb-1">Your Answers Are Temporarily Shielded</h4>
+          <p class="text-xs text-slate-600">
+            Confirm these 4 common trap items before we grade your paper. Rushing students skip these and lose 10-15% of points:
+          </p>
+
+          <div class="mt-4 space-y-3">
+            <label class="flex items-start gap-3 p-3 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-indigo-300 transition-all">
+              <input type="checkbox" id="chk-units" class="mt-0.5 h-4 w-4 text-indigo-600 rounded focus:ring-indigo-500 border-slate-300">
+              <div class="text-xs">
+                <strong class="text-slate-800 block">1. Did I include explicit units on all numerical values?</strong>
+                <span class="text-slate-500">(e.g., "minutes", "pounds", "miles per hour", "$")</span>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-3 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-indigo-300 transition-all">
+              <input type="checkbox" id="chk-category" class="mt-0.5 h-4 w-4 text-indigo-600 rounded focus:ring-indigo-500 border-slate-300">
+              <div class="text-xs">
+                <strong class="text-slate-800 block">2. Did I explicitly state the category name?</strong>
+                <span class="text-slate-500">I used the exact phrase "measure of center" or "measure of variability (spread)".</span>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-3 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-indigo-300 transition-all">
+              <input type="checkbox" id="chk-outliers" class="mt-0.5 h-4 w-4 text-indigo-600 rounded focus:ring-indigo-500 border-slate-300">
+              <div class="text-xs">
+                <strong class="text-slate-800 block">3. Did I check for skew or outliers before picking Mean vs. Median?</strong>
+                <span class="text-slate-500">Remember: If skewed or outliers exist &rarr; Median &amp; IQR! If symmetric &rarr; Mean &amp; SD!</span>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-3 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-indigo-300 transition-all">
+              <input type="checkbox" id="chk-subparts" class="mt-0.5 h-4 w-4 text-indigo-600 rounded focus:ring-indigo-500 border-slate-300">
+              <div class="text-xs">
+                <strong class="text-slate-800 block">4. Did I respond to every secondary question prompt?</strong>
+                <span class="text-slate-500">I did not stop at calculating; I answered the "Explain why" part too.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Submission Buttons -->
+        <div class="flex items-center justify-between pt-2">
+          <button onclick="returnToQuizEditing()" class="px-4 py-2 border border-slate-300 text-slate-700 font-semibold rounded-xl text-xs hover:bg-slate-50">
+            <i class="fa-solid fa-eye mr-1"></i> Unshield &amp; Edit My Work
+          </button>
+          <button onclick="submitFinalQuiz()" id="btn-final-submit" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>Submit For Final Grading</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Final Report & Score Screen -->
+      <div id="quiz-results-container" class="hidden bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+        <!-- Results Banner -->
+        <div class="text-center py-4">
+          <div id="results-badge" class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 text-2xl font-black mb-3">
+            <i class="fa-solid fa-award"></i>
+          </div>
+          <h3 class="text-2xl font-black text-slate-900" id="results-score-text">Score: 4 / 4 (100%)</h3>
+          <p class="text-sm text-slate-500 mt-1" id="results-pacing-feedback">
+            Time Taken: 7 mins 45 secs • Perfect pacing! You did not rush.
+          </p>
+        </div>
+
+        <!-- Habits Grade -->
+        <div class="grid sm:grid-cols-3 gap-4">
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+            <span class="text-[11px] font-bold uppercase text-slate-400 block">Pacing Discipline</span>
+            <span id="res-habit-pacing" class="text-sm font-bold text-emerald-600 mt-1 block">No Rushing Detected</span>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+            <span class="text-[11px] font-bold uppercase text-slate-400 block">Key Word Highlighting</span>
+            <span id="res-habit-highlights" class="text-sm font-bold text-indigo-600 mt-1 block">Active</span>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+            <span class="text-[11px] font-bold uppercase text-slate-400 block">Cover-Up Protocol</span>
+            <span id="res-habit-audit" class="text-sm font-bold text-amber-600 mt-1 block">Completed 4/4</span>
+          </div>
+        </div>
+
+        <!-- Breakdown List -->
+        <div class="space-y-4 pt-4 border-t border-slate-100" id="results-breakdown-list">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="flex justify-center gap-3 pt-4">
+          <button onclick="startNewQuiz()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-all shadow-sm">
+            <i class="fa-solid fa-rotate-left mr-1.5"></i> Try Another Mini-Quiz
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Tab Switching Logic
+    function switchTab(tabId) {
+      ['anchor', 'match', 'graphAudit', 'quiz'].forEach(t => {
+        const view = document.getElementById(`view-${t}`);
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === tabId) {
+          view.classList.remove('hidden');
+          btn.className = "px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 bg-indigo-800 text-white border border-indigo-700";
+        } else {
+          view.classList.add('hidden');
+          btn.className = "px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60";
+        }
+      });
+      if (tabId === 'match') {
+        renderMatchmakerProblem();
+      } else if (tabId === 'graphAudit') {
+        renderGraphAuditScenario();
+      }
+    }
+
+    // Sound control and print state
+    let soundEnabled = localStorage.getItem('statmaster_sound') !== 'false';
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      localStorage.setItem('statmaster_sound', soundEnabled);
+      updateSoundIcon();
+      if (soundEnabled) playTone(587, 'sine', 0.1);
+    }
+
+    function updateSoundIcon() {
+      const icon = document.getElementById('sound-icon');
+      if (icon) {
+        icon.className = soundEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark text-slate-400';
+      }
+    }
+
+    function printStudySheet() {
+      switchTab('anchor');
+      setTimeout(() => {
+        window.print();
+      }, 150);
+    }
+
+    // Sound effect helper (Web Audio API synthetic beeps)
+    function playTone(freq, type = 'sine', duration = 0.15) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {
+        // audio might be restricted without user interaction
+      }
+    }
+
+    // ==========================================================
+    // MODULE 1: MATCHMAKER (Center vs. Spread + Writing Builder)
+    // ==========================================================
+    const matchmakerScenarios = [
+      {
+        id: 1,
+        title: "Daily Study Hours for Freshmen (Hours)",
+        context: "Survey of 30 Students",
+        shapeType: "skewed", // skewed right by 2 extreme grinders
+        correctCenter: "median",
+        correctSpread: "iqr",
+        dataPoints: [0.5, 1, 1, 1.5, 1.5, 1.5, 2, 2, 2, 2, 2.5, 2.5, 3, 3, 7.5, 8.0],
+        units: "hours",
+        hasOutlier: true,
+        outlierDesc: "Two high outliers at 7.5 and 8.0 hours pull the tail to the right.",
+        plotType: "dotplot",
+        xMin: 0,
+        xMax: 9,
+        step: 1
+      },
+      {
+        id: 2,
+        title: "Heights of Basketball Team Members (Inches)",
+        context: "Varsity Roster Heights",
+        shapeType: "symmetric",
+        correctCenter: "mean",
+        correctSpread: "sd",
+        dataPoints: [68, 69, 70, 70, 71, 71, 71, 72, 72, 72, 72, 73, 73, 74, 74, 75, 76],
+        units: "inches",
+        hasOutlier: false,
+        outlierDesc: "Evenly balanced bell distribution around 72 inches with no outliers.",
+        plotType: "dotplot",
+        xMin: 66,
+        xMax: 78,
+        step: 2
+      },
+      {
+        id: 3,
+        title: "Miles Driven on a Full Tank of Gas (Miles)",
+        context: "Highway Commuter Sedan Fleet",
+        shapeType: "skewed", // low outlier because of a leak
+        correctCenter: "median",
+        correctSpread: "iqr",
+        dataPoints: [110, 360, 370, 380, 385, 390, 390, 400, 405, 410, 420],
+        units: "miles",
+        hasOutlier: true,
+        outlierDesc: "One severe low outlier at 110 miles skews the data left.",
+        plotType: "histogram",
+        bins: [
+          { from: 100, to: 150, count: 1 },
+          { from: 150, to: 200, count: 0 },
+          { from: 200, to: 250, count: 0 },
+          { from: 250, to: 300, count: 0 },
+          { from: 300, to: 350, count: 0 },
+          { from: 350, to: 400, count: 7 },
+          { from: 400, to: 450, count: 3 }
+        ],
+        xMin: 100,
+        xMax: 450,
+        step: 50
+      },
+      {
+        id: 4,
+        title: "Mass of Standard Factory Bolts (Grams)",
+        context: "Precision Quality Control Check",
+        shapeType: "symmetric",
+        correctCenter: "mean",
+        correctSpread: "sd",
+        dataPoints: [24.8, 24.9, 24.9, 25.0, 25.0, 25.0, 25.0, 25.1, 25.1, 25.2],
+        units: "grams",
+        hasOutlier: false,
+        outlierDesc: "Normal mound centered cleanly at 25.0 grams.",
+        plotType: "dotplot",
+        xMin: 24.5,
+        xMax: 25.5,
+        step: 0.2
+      },
+      {
+        id: 5,
+        title: "Home Sale Prices in a Suburban Neighborhood ($ Thousands)",
+        context: "County Real Estate Records",
+        shapeType: "skewed",
+        correctCenter: "median",
+        correctSpread: "iqr",
+        dataPoints: [280, 290, 310, 315, 320, 325, 330, 340, 350, 850, 920],
+        units: "$ thousands",
+        hasOutlier: true,
+        outlierDesc: "Two multi-million dollar luxury estates at $850k and $920k pull the tail heavily to the right.",
+        plotType: "dotplot",
+        xMin: 200,
+        xMax: 1000,
+        step: 100
+      },
+      {
+        id: 6,
+        title: "Diameter of Tennis Balls from Standard Production (Centimeters)",
+        context: "Tournament Quality Assurance",
+        shapeType: "symmetric",
+        correctCenter: "mean",
+        correctSpread: "sd",
+        dataPoints: [6.60, 6.62, 6.64, 6.65, 6.66, 6.67, 6.68, 6.68, 6.70, 6.72],
+        units: "cm",
+        hasOutlier: false,
+        outlierDesc: "Uniform bell distribution tightly grouped around 6.66 cm with no outliers.",
+        plotType: "dotplot",
+        xMin: 6.55,
+        xMax: 6.75,
+        step: 0.05
+      }
+    ];
+
+    // Mastery tracking and display
+    function updateMasteryDisplay() {
+      const el = document.getElementById('mastery-text');
+      if (!el) return;
+      const bestScore = localStorage.getItem('statmaster_best_score');
+      const bestPct = localStorage.getItem('statmaster_best_pct');
+      if (bestScore && bestPct !== null) {
+        el.innerHTML = `Best: <strong>${bestScore} (${bestPct}%)</strong>`;
+      } else {
+        el.innerHTML = `Best: None yet`;
+      }
+    }
+
+    // Interactive Outlier Calculator
+    function calcOutlierBounds() {
+      const q1El = document.getElementById('outlier-q1');
+      const q3El = document.getElementById('outlier-q3');
+      const testValEl = document.getElementById('outlier-test-val');
+      const resEl = document.getElementById('outlier-calc-output');
+      if (!q1El || !q3El || !resEl) return;
+
+      const q1 = parseFloat(q1El.value);
+      const q3 = parseFloat(q3El.value);
+      const testValStr = testValEl ? testValEl.value : '';
+
+      if (isNaN(q1) || isNaN(q3)) {
+        resEl.innerHTML = '<span class="text-slate-400">Enter numbers for Q1 and Q3 above...</span>';
+        return;
+      }
+      if (q3 <= q1) {
+        resEl.innerHTML = '<span class="text-rose-600 font-bold text-[11px]"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Q3 must be greater than Q1!</span>';
+        return;
+      }
+
+      const iqr = q3 - q1;
+      const lowerFence = q1 - (1.5 * iqr);
+      const upperFence = q3 + (1.5 * iqr);
+
+      let verdictHtml = '';
+      if (testValStr.trim() !== '') {
+        const testVal = parseFloat(testValStr);
+        if (!isNaN(testVal)) {
+          if (testVal < lowerFence) {
+            verdictHtml = `<div class="mt-2.5 p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 font-bold text-xs"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${testVal} is a LOW OUTLIER (${testVal} < ${lowerFence.toFixed(2)})</div>`;
+          } else if (testVal > upperFence) {
+            verdictHtml = `<div class="mt-2.5 p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 font-bold text-xs"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${testVal} is a HIGH OUTLIER (${testVal} > ${upperFence.toFixed(2)})</div>`;
+          } else {
+            verdictHtml = `<div class="mt-2.5 p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-xs"><i class="fa-solid fa-circle-check mr-1"></i> ${testVal} is NOT an outlier (inside [${lowerFence.toFixed(2)}, ${upperFence.toFixed(2)}])</div>`;
+          }
+        }
+      }
+
+      resEl.innerHTML = `
+        <div class="grid grid-cols-3 gap-1.5 text-center text-xs">
+          <div class="p-2 bg-indigo-50/80 rounded-lg border border-indigo-100">
+            <span class="text-[9px] uppercase font-bold text-indigo-600 block">IQR</span>
+            <strong class="text-xs text-indigo-950 font-mono">${iqr.toFixed(2)}</strong>
+          </div>
+          <div class="p-2 bg-slate-100/90 rounded-lg border border-slate-200">
+            <span class="text-[9px] uppercase font-bold text-slate-500 block">Lower Fence</span>
+            <strong class="text-xs text-slate-800 font-mono">${lowerFence.toFixed(2)}</strong>
+          </div>
+          <div class="p-2 bg-slate-100/90 rounded-lg border border-slate-200">
+            <span class="text-[9px] uppercase font-bold text-slate-500 block">Upper Fence</span>
+            <strong class="text-xs text-slate-800 font-mono">${upperFence.toFixed(2)}</strong>
+          </div>
+        </div>
+        ${verdictHtml}
+      `;
+    }
+
+    let currentMatchIndex = 0;
+    let selectedShapeChoice = null;
+    let selectedCenterChoice = null;
+    let selectedSpreadChoice = null;
+
+    function renderMatchmakerProblem() {
+      const scenario = matchmakerScenarios[currentMatchIndex];
+      document.getElementById('match-index').textContent = `${currentMatchIndex + 1} of ${matchmakerScenarios.length}`;
+      document.getElementById('match-plot-title').textContent = scenario.title;
+      document.getElementById('match-context-tag').textContent = scenario.context;
+      
+      // Reset user selections
+      selectedShapeChoice = null;
+      selectedCenterChoice = null;
+      selectedSpreadChoice = null;
+      resetMatchmakerButtons();
+      updateSentencePreview();
+
+      const feedback = document.getElementById('match-feedback');
+      feedback.className = 'hidden';
+
+      // Draw distribution on canvas
+      drawMatchCanvas(scenario);
+    }
+
+    function drawMatchCanvas(scenario) {
+      const canvas = document.getElementById('matchCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const W = canvas.width;
+      const H = canvas.height;
+      const padLeft = 40;
+      const padRight = 30;
+      const padBottom = 45;
+      const padTop = 25;
+      const plotWidth = W - padLeft - padRight;
+      const baselineY = H - padBottom;
+
+      // Draw axis line
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(padLeft - 10, baselineY);
+      ctx.lineTo(W - padRight + 10, baselineY);
+      ctx.stroke();
+
+      // Axis Ticks & Numbers
+      const range = scenario.xMax - scenario.xMin;
+      ctx.fillStyle = '#475569';
+      ctx.font = '11px Plus Jakarta Sans, sans-serif';
+      ctx.textAlign = 'center';
+
+      for (let v = scenario.xMin; v <= scenario.xMax + 0.001; v += scenario.step) {
+        const xPos = padLeft + ((v - scenario.xMin) / range) * plotWidth;
+        ctx.beginPath();
+        ctx.moveTo(xPos, baselineY);
+        ctx.lineTo(xPos, baselineY + 6);
+        ctx.stroke();
+        ctx.fillText(Number(v.toFixed(1)), xPos, baselineY + 18);
+      }
+
+      // Axis label with units
+      ctx.font = 'bold 11px Plus Jakarta Sans, sans-serif';
+      ctx.fillStyle = '#0f172a';
+      ctx.fillText(`Scale in ${scenario.units}`, W / 2, H - 6);
+
+      if (scenario.plotType === 'dotplot') {
+        // Count frequencies of data points
+        const counts = {};
+        scenario.dataPoints.forEach(pt => {
+          counts[pt] = (counts[pt] || 0) + 1;
+        });
+
+        // Plot dots
+        const radius = 6;
+        Object.keys(counts).forEach(ptStr => {
+          const pt = parseFloat(ptStr);
+          const xPos = padLeft + ((pt - scenario.xMin) / range) * plotWidth;
+          const totalInStack = counts[ptStr];
+
+          for (let i = 0; i < totalInStack; i++) {
+            const yPos = baselineY - 8 - (i * (radius * 2 + 3));
+            ctx.beginPath();
+            ctx.arc(xPos, yPos, radius, 0, Math.PI * 2);
+            // Highlight outlier if exists
+            if (scenario.hasOutlier && (pt >= scenario.xMax - scenario.step || pt <= scenario.xMin + scenario.step)) {
+              ctx.fillStyle = '#ef4444';
+            } else {
+              ctx.fillStyle = '#4f46e5';
+            }
+            ctx.fill();
+            ctx.strokeStyle = '#312e81';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+        });
+      } else if (scenario.plotType === 'histogram') {
+        // Draw bars for bins
+        const maxCount = Math.max(...scenario.bins.map(b => b.count));
+        const maxBarH = baselineY - padTop - 15;
+
+        scenario.bins.forEach(bin => {
+          const xStart = padLeft + ((bin.from - scenario.xMin) / range) * plotWidth;
+          const barW = ((bin.to - bin.from) / range) * plotWidth;
+          const barH = (bin.count / maxCount) * maxBarH;
+          const yStart = baselineY - barH;
+
+          if (bin.count > 0) {
+            ctx.fillStyle = (bin.from < 200) ? '#f87171' : '#6366f1';
+            ctx.fillRect(xStart, yStart, barW, barH);
+            ctx.strokeStyle = '#1e1b4b';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(xStart, yStart, barW, barH);
+
+            // Count label on top of bar
+            ctx.fillStyle = '#1e293b';
+            ctx.font = 'bold 11px Plus Jakarta Sans, sans-serif';
+            ctx.fillText(bin.count, xStart + barW / 2, yStart - 5);
+          }
+        });
+      }
+    }
+
+    function resetMatchmakerButtons() {
+      document.querySelectorAll('.shape-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-100', 'border-indigo-600', 'text-indigo-950');
+        btn.classList.add('bg-white', 'border-slate-200');
+      });
+      document.querySelectorAll('.stat-center-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-100', 'border-indigo-600', 'text-indigo-950');
+        btn.classList.add('bg-white', 'border-slate-200');
+      });
+      document.querySelectorAll('.stat-spread-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-100', 'border-indigo-600', 'text-indigo-950');
+        btn.classList.add('bg-white', 'border-slate-200');
+      });
+    }
+
+    function selectShape(type) {
+      selectedShapeChoice = type;
+      playTone(320);
+      document.querySelectorAll('.shape-btn').forEach(b => {
+        b.classList.remove('bg-indigo-100', 'border-indigo-600', 'text-indigo-950');
+      });
+      const el = document.getElementById(`btn-shape-${type}`);
+      if (el) el.classList.add('bg-indigo-100', 'border-indigo-600', 'text-indigo-950');
+      updateSentencePreview();
+    }
+
+    function selectStat(cat, statName) {
+      playTone(400);
+      if (cat === 'center') {
+        selectedCenterChoice = statName;
+        document.querySelectorAll('.stat-center-btn').forEach(b => b.classList.remove('bg-indigo-100', 'border-indigo-600', 'text-indigo-950'));
+        document.getElementById(`btn-center-${statName}`).classList.add('bg-indigo-100', 'border-indigo-600', 'text-indigo-950');
+      } else {
+        selectedSpreadChoice = statName;
+        document.querySelectorAll('.stat-spread-btn').forEach(b => b.classList.remove('bg-indigo-100', 'border-indigo-600', 'text-indigo-950'));
+        document.getElementById(`btn-spread-${statName}`).classList.add('bg-indigo-100', 'border-indigo-600', 'text-indigo-950');
+      }
+      updateSentencePreview();
+    }
+
+    function updateSentencePreview() {
+      const preview = document.getElementById('sentence-preview');
+      const shapeWord = selectedShapeChoice ? `<span class="highlight-mark">${selectedShapeChoice.toUpperCase()}</span>` : `[SHAPE]`;
+      const centerWord = selectedCenterChoice ? `<span class="highlight-mark">${selectedCenterChoice.toUpperCase()}</span>` : `[CENTER METRIC]`;
+      const spreadWord = selectedSpreadChoice ? `<span class="highlight-mark">${selectedSpreadChoice.toUpperCase()}</span>` : `[VARIABILITY METRIC]`;
+
+      preview.innerHTML = `
+        "Because the distribution is <strong>${shapeWord}</strong>, the best measure of <strong>center</strong> to use is the <strong>${centerWord}</strong>, and the best measure of <strong>variability</strong> to use is the <strong>${spreadWord}</strong> because it accurately reflects the spread without distortion."
+      `;
+    }
+
+    function checkMatchmakerAnswer() {
+      const scenario = matchmakerScenarios[currentMatchIndex];
+      const feedback = document.getElementById('match-feedback');
+
+      if (!selectedShapeChoice || !selectedCenterChoice || !selectedSpreadChoice) {
+        feedback.className = 'p-3 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-xs font-semibold';
+        feedback.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Please complete all 3 selections (Shape, Center, and Spread) to validate!';
+        return;
+      }
+
+      const isShapeCorrect = selectedShapeChoice === scenario.shapeType;
+      const isCenterCorrect = selectedCenterChoice === scenario.correctCenter;
+      const isSpreadCorrect = selectedSpreadChoice === scenario.correctSpread;
+
+      if (isShapeCorrect && isCenterCorrect && isSpreadCorrect) {
+        playTone(587); // D5 success
+        confetti({ particleCount: 35, spread: 60, origin: { y: 0.7 } });
+        feedback.className = 'p-4 rounded-xl bg-emerald-50 text-emerald-950 border border-emerald-300 space-y-2';
+        feedback.innerHTML = `
+          <div class="flex items-center gap-2 font-bold text-emerald-800 text-sm">
+            <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i> Perfect Statistical Reasoning! Full Credit!
+          </div>
+          <p class="text-xs leading-relaxed text-emerald-900">
+            <strong>Why your answer scores top marks:</strong> You identified that this data is <em>${scenario.shapeType}</em> (${scenario.outlierDesc}).
+            You explicitly stated that <strong>${scenario.correctCenter.toUpperCase()}</strong> is the <em>measure of center</em>, and <strong>${scenario.correctSpread.toUpperCase()}</strong> is the <em>measure of variability</em>.
+          </p>
+        `;
+      } else {
+        playTone(220, 'square');
+        feedback.className = 'p-4 rounded-xl bg-rose-50 text-rose-950 border border-rose-200 space-y-2';
+        let hint = "";
+        if (scenario.shapeType === 'skewed') {
+          hint = `Notice the outlier or tail! Extreme points pull the mean away from the true center. Therefore, use <strong>MEDIAN</strong> for Center and <strong>IQR</strong> for Variability because they are resistant!`;
+        } else {
+          hint = `This distribution is evenly balanced (symmetric). Since there are no outliers pulling the values, use <strong>MEAN</strong> for Center and <strong>STANDARD DEVIATION</strong> for Variability!`;
+        }
+        feedback.innerHTML = `
+          <div class="flex items-center gap-2 font-bold text-rose-800 text-sm">
+            <i class="fa-solid fa-circle-xmark text-rose-600 text-base"></i> Needs Revision: Remember the Pairing Rule
+          </div>
+          <p class="text-xs text-rose-900 leading-relaxed">${hint}</p>
+        `;
+      }
+    }
+
+    function nextMatchmakerProblem() {
+      currentMatchIndex = (currentMatchIndex + 1) % matchmakerScenarios.length;
+      renderMatchmakerProblem();
+    }
+
+    // ==========================================================
+    // MODULE 2: GRAPHING EXECUTION AUDITOR ("SPOT THE FLAW")
+    // ==========================================================
+    const auditScenarios = [
+      {
+        id: 1,
+        type: "Box Plot",
+        title: "Backpack Weights of 15 Freshmen",
+        prompt: "Construct a box plot for backpack weights in pounds. Minimum = 6, Q1 = 12, Median = 18, Q3 = 24, Maximum = 38.",
+        errorsPresent: ["uneven_scale", "missing_units"],
+        scaleIntervals: [0, 6, 12, 18, 24, 38], // Non-uniform interval! Skipping numbers directly to data points
+        axisLabel: "Backpack Weights", // missing "(pounds)"
+        hasTitle: true,
+        summaryPoints: [6, 12, 18, 24, 38],
+        options: [
+          { key: "uneven_scale", label: "Uneven Scale Intervals (ticks jump directly to data points instead of equal intervals like 0, 5, 10...)" },
+          { key: "missing_units", label: "Missing Units on Axis Label (says 'Backpack Weights' instead of 'Backpack Weights (pounds)')" },
+          { key: "wrong_median", label: "Median bar is incorrectly plotted at the Mean" },
+          { key: "missing_title", label: "The entire graph is missing a descriptive Context Title" }
+        ],
+        explanation: "The student fell into two very common traps: (1) Scaling their axis with their five-number summary numbers (0, 6, 12, 18, 24, 38) rather than an even mathematical interval (0, 5, 10, 15...). (2) Forgetting to indicate '(pounds)' on the axis label!"
+      },
+      {
+        id: 2,
+        type: "Histogram",
+        title: "Weekly Screen Time of Students",
+        prompt: "Draw a histogram showing weekly screen time in hours with bin widths of 5 hours.",
+        errorsPresent: ["missing_axis_label", "bar_gaps"],
+        scaleIntervals: [0, 5, 10, 15, 20, 25, 30],
+        axisLabel: "", // Missing axis title completely!
+        hasTitle: true,
+        barGaps: true, // Left gaps like a bar chart instead of continuous histogram bars
+        options: [
+          { key: "missing_axis_label", label: "Missing X-Axis Label completely (no mention of 'Screen Time (hours)')" },
+          { key: "bar_gaps", label: "Gaps between histogram bars (histograms for continuous data must have touching bars)" },
+          { key: "uneven_scale", label: "Uneven bin intervals (e.g. 5, then 12, then 20)" },
+          { key: "wrong_y_scale", label: "Y-axis frequency counts are missing or inverted" }
+        ],
+        explanation: "Histograms model continuous numerical data—the bars must TOUCH unless a frequency bin is zero! Furthermore, leaving an axis completely unlabeled loses critical execution points."
+      },
+      {
+        id: 3,
+        type: "Dot Plot",
+        title: "Number of Siblings Reported by Freshmen",
+        prompt: "Draw a dot plot for student sibling counts: 0, 0, 1, 1, 1, 2, 2, 3, 5.",
+        errorsPresent: ["uneven_dots", "missing_units"],
+        scaleIntervals: [0, 1, 2, 3, 4, 5],
+        axisLabel: "Siblings",
+        hasTitle: true,
+        options: [
+          { key: "uneven_dots", label: "Uneven dot sizing and irregular vertical spacing (dots must be uniform size and spaced equally)" },
+          { key: "missing_units", label: "Missing descriptive units on axis ('Number of Siblings')" },
+          { key: "skipped_zero", label: "Forgot to include 0 on the number line" },
+          { key: "wrong_type", label: "Drew a histogram instead of a dot plot" }
+        ],
+        explanation: "Dot plots convey quantity visually through height. If dots are drawn with different sizes or irregular spacing, columns look taller or shorter than they actually are! In addition, always specify full axis context (e.g., 'Number of Siblings')."
+      }
+    ];
+
+    let currentAuditIndex = 0;
+
+    function renderGraphAuditScenario() {
+      const scenario = auditScenarios[currentAuditIndex];
+      document.getElementById('audit-graph-type').textContent = `Plot Type: ${scenario.type}`;
+      document.getElementById('audit-title-display').textContent = scenario.title;
+      document.getElementById('audit-prompt-text').textContent = `"${scenario.prompt}"`;
+      document.getElementById('audit-feedback-result').className = 'hidden';
+
+      // Render Checkboxes
+      const group = document.getElementById('audit-checkbox-group');
+      group.innerHTML = '';
+      scenario.options.forEach(opt => {
+        const item = document.createElement('label');
+        item.className = "flex items-start gap-3 p-3 bg-white rounded-xl border border-slate-200 hover:border-indigo-300 cursor-pointer transition-all";
+        item.innerHTML = `
+          <input type="checkbox" value="${opt.key}" class="audit-flaw-chk mt-0.5 h-4 w-4 text-indigo-600 rounded border-slate-300">
+          <span class="text-xs text-slate-700 leading-snug font-medium">${opt.label}</span>
+        `;
+        group.appendChild(item);
+      });
+
+      drawAuditCanvas(scenario);
+    }
+
+    function drawAuditCanvas(scenario) {
+      const canvas = document.getElementById('auditCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const W = canvas.width;
+      const H = canvas.height;
+      const baselineY = H - 55;
+      const padLeft = 45;
+      const padRight = 35;
+
+      if (scenario.type === "Box Plot") {
+        // Draw axis with deliberate uneven spacing
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(padLeft - 10, baselineY);
+        ctx.lineTo(W - padRight + 10, baselineY);
+        ctx.stroke();
+
+        const vals = scenario.scaleIntervals;
+        const tickStep = (W - padLeft - padRight) / (vals.length - 1);
+
+        vals.forEach((num, idx) => {
+          const x = padLeft + idx * tickStep;
+          ctx.beginPath();
+          ctx.moveTo(x, baselineY);
+          ctx.lineTo(x, baselineY + 6);
+          ctx.stroke();
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 11px Plus Jakarta Sans';
+          ctx.textAlign = 'center';
+          ctx.fillText(num, x, baselineY + 18);
+        });
+
+        // Axis label without units
+        ctx.font = 'bold 11px Plus Jakarta Sans';
+        ctx.fillStyle = '#475569';
+        ctx.fillText(scenario.axisLabel, W / 2, H - 12);
+
+        // Draw Box Plot
+        const minX = padLeft + 1 * tickStep; // at 6
+        const q1X = padLeft + 2 * tickStep;  // at 12
+        const medX = padLeft + 3 * tickStep; // at 18
+        const q3X = padLeft + 4 * tickStep;  // at 24
+        const maxX = padLeft + 5 * tickStep; // at 38
+        const boxY = 70;
+        const boxH = 50;
+
+        // Whiskers
+        ctx.strokeStyle = '#2563eb';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(minX, boxY + boxH / 2);
+        ctx.lineTo(q1X, boxY + boxH / 2);
+        ctx.moveTo(q3X, boxY + boxH / 2);
+        ctx.lineTo(maxX, boxY + boxH / 2);
+        ctx.stroke();
+
+        // End caps
+        ctx.beginPath();
+        ctx.moveTo(minX, boxY + 15);
+        ctx.lineTo(minX, boxY + boxH - 15);
+        ctx.moveTo(maxX, boxY + 15);
+        ctx.lineTo(maxX, boxY + boxH - 15);
+        ctx.stroke();
+
+        // Box
+        ctx.fillStyle = '#dbeafe';
+        ctx.fillRect(q1X, boxY, q3X - q1X, boxH);
+        ctx.strokeRect(q1X, boxY, q3X - q1X, boxH);
+
+        // Median line
+        ctx.strokeStyle = '#1e3a8a';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(medX, boxY);
+        ctx.lineTo(medX, boxY + boxH);
+        ctx.stroke();
+      } else if (scenario.type === "Dot Plot") {
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(padLeft - 10, baselineY);
+        ctx.lineTo(W - padRight + 10, baselineY);
+        ctx.stroke();
+
+        const vals = scenario.scaleIntervals;
+        const tickStep = (W - padLeft - padRight) / (vals.length - 1);
+
+        vals.forEach((num, idx) => {
+          const x = padLeft + idx * tickStep;
+          ctx.beginPath();
+          ctx.moveTo(x, baselineY);
+          ctx.lineTo(x, baselineY + 6);
+          ctx.stroke();
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 11px Plus Jakarta Sans';
+          ctx.textAlign = 'center';
+          ctx.fillText(num, x, baselineY + 18);
+        });
+
+        // Axis label
+        ctx.font = 'bold 11px Plus Jakarta Sans';
+        ctx.fillStyle = '#475569';
+        ctx.fillText(scenario.axisLabel, W / 2, H - 12);
+
+        // Draw dots with deliberate flaws (uneven sizes and vertical spacing)
+        const stacks = { 0: 2, 1: 3, 2: 2, 3: 1, 5: 1 };
+        Object.keys(stacks).forEach(k => {
+          const val = parseInt(k, 10);
+          const x = padLeft + val * tickStep;
+          const count = stacks[k];
+          for (let i = 0; i < count; i++) {
+            const radius = (val === 1 && i === 1) ? 9 : (val === 0 ? 4 : 6);
+            const yStep = (val === 1) ? 13 : 18;
+            const y = baselineY - 10 - (i * yStep);
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#4f46e5';
+            ctx.fill();
+            ctx.strokeStyle = '#312e81';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+        });
+      } else {
+        // Histogram with deliberate gaps
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(padLeft, baselineY);
+        ctx.lineTo(W - padRight, baselineY);
+        ctx.stroke();
+
+        // Bars
+        const heights = [30, 70, 110, 85, 40, 15];
+        const barSlotW = (W - padLeft - padRight) / heights.length;
+
+        heights.forEach((h, idx) => {
+          const x = padLeft + idx * barSlotW + (scenario.barGaps ? 8 : 0);
+          const w = scenario.barGaps ? barSlotW - 16 : barSlotW;
+          const y = baselineY - h;
+
+          ctx.fillStyle = '#cbd5e1';
+          ctx.fillRect(x, y, w, h);
+          ctx.strokeStyle = '#475569';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(x, y, w, h);
+
+          // Ticks
+          ctx.fillStyle = '#334155';
+          ctx.font = '10px JetBrains Mono';
+          ctx.fillText(idx * 5, padLeft + idx * barSlotW, baselineY + 15);
+        });
+
+        // Missing axis title
+        ctx.font = 'italic 11px Plus Jakarta Sans';
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText("(Missing Axis Label & Units Here!)", W / 2, H - 10);
+      }
+    }
+
+    function evaluateGraphAudit() {
+      const scenario = auditScenarios[currentAuditIndex];
+      const selected = Array.from(document.querySelectorAll('.audit-flaw-chk:checked')).map(el => el.value);
+      const res = document.getElementById('audit-feedback-result');
+
+      const missed = scenario.errorsPresent.filter(e => !selected.includes(e));
+      const falsePositives = selected.filter(e => !scenario.errorsPresent.includes(e));
+
+      if (missed.length === 0 && falsePositives.length === 0) {
+        playTone(523);
+        confetti({ particleCount: 30, spread: 50, origin: { y: 0.8 } });
+        res.className = "p-4 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-950 block space-y-1.5";
+        res.innerHTML = `
+          <div class="font-bold flex items-center gap-1.5 text-emerald-800 text-sm">
+            <i class="fa-solid fa-circle-check"></i> Eagle Eye: You spotted all execution mistakes!
+          </div>
+          <p class="leading-relaxed">${scenario.explanation}</p>
+        `;
+      } else {
+        playTone(200, 'triangle');
+        res.className = "p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 block space-y-1.5";
+        res.innerHTML = `
+          <div class="font-bold flex items-center gap-1.5 text-amber-800 text-sm">
+            <i class="fa-solid fa-circle-exclamation"></i> Not quite right! Look closer at the details.
+          </div>
+          <p class="leading-relaxed">${scenario.explanation}</p>
+        `;
+      }
+    }
+
+    function loadGraphAuditScenario() {
+      currentAuditIndex = (currentAuditIndex + 1) % auditScenarios.length;
+      renderGraphAuditScenario();
+    }
+
+    // ==========================================================
+    // MODULE 3: PACED MINI-QUIZ WITH "COVER-UP & HIGHLIGHT" HABITS
+    // ==========================================================
+    const quizQuestions = [
+      {
+        id: 1,
+        title: "Test Problem 1: Choosing Statistics for Skewed Test Scores",
+        promptText: "A math class took an exam. Most students scored between 75 and 90, but three students who were absent scored 0. State the distribution shape. Next, explicitly name which measure of center and which measure of variability should be used to describe this class, and explain why with respect to resistance.",
+        actionTokens: ["State the distribution shape", "explicitly name", "measure of center", "measure of variability", "explain why with respect to resistance"],
+        hasGraphic: false,
+        fields: [
+          {
+            id: "q1_shape",
+            label: "Part A: What is the shape of this distribution?",
+            type: "select",
+            options: ["Select...", "Symmetric / Bell-Shaped", "Skewed Left (low outliers pull the tail left)", "Uniform"],
+            correct: "Skewed Left (low outliers pull the tail left)"
+          },
+          {
+            id: "q1_center",
+            label: "Part B: Explicitly name the best Measure of Center (with category name):",
+            type: "select",
+            options: ["Select...", "Mean is the measure of center", "Median is the measure of center", "Standard Deviation is the measure of center"],
+            correct: "Median is the measure of center"
+          },
+          {
+            id: "q1_spread",
+            label: "Part C: Explicitly name the best Measure of Variability (Spread):",
+            type: "select",
+            options: ["Select...", "IQR (Interquartile Range) is the measure of variability", "Standard Deviation is the measure of variability", "Mean is the measure of variability"],
+            correct: "IQR (Interquartile Range) is the measure of variability"
+          },
+          {
+            id: "q1_why",
+            label: "Part D: Explain WHY (mentioning resistance to extreme values):",
+            type: "select",
+            options: [
+              "Select...",
+              "Because median and IQR are resistant to outliers, whereas mean and standard deviation would be falsely dragged down by the 0s.",
+              "Because mean is always more accurate no matter what.",
+              "Because IQR uses all numbers equally."
+            ],
+            correct: "Because median and IQR are resistant to outliers, whereas mean and standard deviation would be falsely dragged down by the 0s."
+          }
+        ]
+      },
+      {
+        id: 2,
+        title: "Test Problem 2: Five-Number Summary & Unit Precision",
+        promptText: "Here are the commute times (in minutes) for 9 teachers: 10, 12, 15, 18, 20, 22, 25, 28, 45. Calculate the median and IQR. Make sure to attach units to your answer and categorize whether IQR measures center or variability.",
+        actionTokens: ["Calculate the median", "and IQR", "attach units", "categorize whether IQR measures center or variability"],
+        hasGraphic: false,
+        fields: [
+          {
+            id: "q2_med",
+            label: "Part A: Median commute time (including units):",
+            type: "select",
+            options: ["Select...", "20 minutes", "20", "22.5 minutes", "18 minutes"],
+            correct: "20 minutes"
+          },
+          {
+            id: "q2_iqr",
+            label: "Part B: IQR commute time (Q3 - Q1, including units):",
+            type: "select",
+            options: ["Select...", "13 minutes (26.5 - 13.5)", "13", "15 minutes", "35 minutes"],
+            correct: "13 minutes (26.5 - 13.5)"
+          },
+          {
+            id: "q2_role",
+            label: "Part C: What category of statistic is IQR?",
+            type: "select",
+            options: ["Select...", "A measure of variability (spread)", "A measure of center", "A measure of shape"],
+            correct: "A measure of variability (spread)"
+          }
+        ]
+      },
+      {
+        id: 3,
+        title: "Test Problem 3: Symmetric Distribution Matching",
+        promptText: "A chemist measures the boiling temperature of pure distilled water across 50 trials. The results form a symmetric bell-shaped histogram with no outliers. Identify the proper summary statistics pair and specify the role of Standard Deviation.",
+        actionTokens: ["Identify the proper summary statistics pair", "specify the role of Standard Deviation"],
+        hasGraphic: true,
+        graphicType: "bell",
+        fields: [
+          {
+            id: "q3_pair",
+            label: "Part A: Which statistic pair should be reported?",
+            type: "select",
+            options: ["Select...", "Mean and Standard Deviation", "Median and IQR", "Mean and IQR", "Median and Standard Deviation"],
+            correct: "Mean and Standard Deviation"
+          },
+          {
+            id: "q3_sd_role",
+            label: "Part B: In this symmetric context, Standard Deviation serves as the:",
+            type: "select",
+            options: ["Select...", "Measure of variability, quantifying typical distance from the mean", "Measure of center", "Measure of outlier count"],
+            correct: "Measure of variability, quantifying typical distance from the mean"
+          }
+        ]
+      },
+      {
+        id: 4,
+        title: "Test Problem 4: Multi-Step Graph Verification",
+        promptText: "When asked to draw a histogram representing student reading speeds in words per minute, you must label axes with units, keep uniform bin sizes, and avoid gaps between continuous bins. Which of the following execution plans is 100% compliant?",
+        actionTokens: ["label axes with units", "keep uniform bin sizes", "avoid gaps between continuous bins", "100% compliant"],
+        hasGraphic: false,
+        fields: [
+          {
+            id: "q4_plan",
+            label: "Select the completely correct graphing checklist:",
+            type: "select",
+            options: [
+              "Select...",
+              "X-axis: 'Reading Speed (words per minute)' with touching bars at intervals 100-150, 150-200; Y-axis: 'Frequency (number of students)' with even tick steps.",
+              "X-axis: 'Speed' with separated bars for each student's exact number; no units needed.",
+              "X-axis: 'Reading Speed' jumping from 100 directly to 180 because no one read at 140 words per minute."
+            ],
+            correct: "X-axis: 'Reading Speed (words per minute)' with touching bars at intervals 100-150, 150-200; Y-axis: 'Frequency (number of students)' with even tick steps."
+          }
+        ]
+      }
+    ];
+
+    let currentQuizIndex = 0;
+    let quizUserAnswers = {};
+    let quizStartTime = Date.now();
+    let quizTimerInterval = null;
+    let quizHighlightedTokensCount = 0;
+
+    function startQuizTimer() {
+      if (quizTimerInterval) clearInterval(quizTimerInterval);
+      quizStartTime = Date.now();
+      quizTimerInterval = setInterval(() => {
+        const elapsedSec = Math.floor((Date.now() - quizStartTime) / 1000);
+        const m = Math.floor(elapsedSec / 60).toString().padStart(2, '0');
+        const s = (elapsedSec % 60).toString().padStart(2, '0');
+        const timerEl = document.getElementById('quiz-timer');
+        if (timerEl) timerEl.textContent = `${m}:${s}`;
+
+        const badge = document.getElementById('pacing-badge');
+        if (badge) {
+          if (elapsedSec < 90) {
+            badge.textContent = "Moving Swiftly (Take your time!)";
+            badge.className = "text-xs font-semibold text-amber-600";
+          } else {
+            badge.textContent = "Optimal Test Pace (Thorough)";
+            badge.className = "text-xs font-semibold text-emerald-600";
+          }
+        }
+      }, 1000);
+    }
+
+    function renderQuizQuestion() {
+      const q = quizQuestions[currentQuizIndex];
+      document.getElementById('quiz-q-num').textContent = currentQuizIndex + 1;
+      
+      // Interactive highlighter prompt setup
+      const promptContainer = document.getElementById('quiz-prompt-interactive');
+      let promptHtml = q.promptText;
+
+      // Wrap action tokens so clicking them toggles a highlight
+      q.actionTokens.forEach(token => {
+        const regex = new RegExp(`(${token})`, 'gi');
+        promptHtml = promptHtml.replace(regex, `<span class="cursor-pointer hover:bg-amber-100 transition-colors rounded px-1 border-b-2 border-dashed border-amber-400 font-medium" onclick="toggleTokenHighlight(this)">$1</span>`);
+      });
+      promptContainer.innerHTML = promptHtml;
+
+      // Graphic if present
+      const graphicWrap = document.getElementById('quiz-graphic-wrap');
+      if (q.hasGraphic) {
+        graphicWrap.classList.remove('hidden');
+        drawQuizGraphic();
+      } else {
+        graphicWrap.classList.add('hidden');
+      }
+
+      // Fields
+      const inputWrap = document.getElementById('quiz-inputs-wrap');
+      inputWrap.innerHTML = '';
+
+      q.fields.forEach(f => {
+        const div = document.createElement('div');
+        div.className = "p-4 bg-slate-50 rounded-xl border border-slate-200";
+        div.innerHTML = `
+          <label class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1.5">${f.label}</label>
+          <select id="${f.id}" onchange="recordQuizAnswer('${f.id}', this.value)" class="w-full text-xs font-medium bg-white border border-slate-300 rounded-lg p-2.5 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
+            ${f.options.map(opt => `<option value="${opt}" ${quizUserAnswers[f.id] === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+          </select>
+        `;
+        inputWrap.appendChild(div);
+      });
+
+      // Navigation button states
+      document.getElementById('quiz-prev-btn').disabled = (currentQuizIndex === 0);
+      if (currentQuizIndex === quizQuestions.length - 1) {
+        document.getElementById('quiz-next-btn').classList.add('hidden');
+        document.getElementById('quiz-finish-btn').classList.remove('hidden');
+      } else {
+        document.getElementById('quiz-next-btn').classList.remove('hidden');
+        document.getElementById('quiz-finish-btn').classList.add('hidden');
+      }
+    }
+
+    function toggleTokenHighlight(span) {
+      if (span.classList.contains('highlight-mark')) {
+        span.classList.remove('highlight-mark');
+        span.classList.add('border-b-2', 'border-dashed', 'border-amber-400');
+        quizHighlightedTokensCount = Math.max(0, quizHighlightedTokensCount - 1);
+      } else {
+        span.classList.add('highlight-mark');
+        span.classList.remove('border-b-2', 'border-dashed', 'border-amber-400');
+        playTone(650, 'sine', 0.08);
+        quizHighlightedTokensCount++;
+      }
+    }
+
+    function recordQuizAnswer(fieldId, val) {
+      quizUserAnswers[fieldId] = val;
+    }
+
+    function nextQuizQuestion() {
+      if (currentQuizIndex < quizQuestions.length - 1) {
+        currentQuizIndex++;
+        renderQuizQuestion();
+      }
+    }
+
+    function prevQuizQuestion() {
+      if (currentQuizIndex > 0) {
+        currentQuizIndex--;
+        renderQuizQuestion();
+      }
+    }
+
+    function drawQuizGraphic() {
+      const canvas = document.getElementById('quizCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const W = canvas.width;
+      const H = canvas.height;
+      const baselineY = H - 35;
+
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(30, baselineY);
+      ctx.lineTo(W - 30, baselineY);
+      ctx.stroke();
+
+      // Draw standard bell curve
+      ctx.beginPath();
+      ctx.moveTo(40, baselineY);
+      for (let x = 40; x <= W - 40; x += 4) {
+        const normX = (x - W / 2) / 60;
+        const bellY = Math.exp(-0.5 * normX * normX);
+        const y = baselineY - (bellY * 110);
+        ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#4f46e5';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(79, 70, 229, 0.1)';
+      ctx.lineTo(W - 40, baselineY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Mean line
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = '#1e1b4b';
+      ctx.beginPath();
+      ctx.moveTo(W / 2, baselineY);
+      ctx.lineTo(W / 2, baselineY - 110);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#1e1b4b';
+      ctx.font = 'bold 11px Plus Jakarta Sans';
+      ctx.textAlign = 'center';
+      ctx.fillText("Mean (Center)", W / 2, baselineY - 118);
+      ctx.fillText("Water Temperature (°C)", W / 2, H - 10);
+    }
+
+    function initiateCoverUpCheck() {
+      // Switch view to cover-up screen
+      document.getElementById('quiz-active-container').classList.add('hidden');
+      document.getElementById('quiz-coverup-container').classList.remove('hidden');
+      // Reset verification checkboxes
+      ['chk-units', 'chk-category', 'chk-outliers', 'chk-subparts'].forEach(id => {
+        document.getElementById(id).checked = false;
+      });
+      playTone(440);
+    }
+
+    function returnToQuizEditing() {
+      document.getElementById('quiz-coverup-container').classList.add('hidden');
+      document.getElementById('quiz-active-container').classList.remove('hidden');
+    }
+
+    function submitFinalQuiz() {
+      // Validate that all cover-up boxes were checked
+      const checkedAll = ['chk-units', 'chk-category', 'chk-outliers', 'chk-subparts'].every(id => document.getElementById(id).checked);
+      if (!checkedAll) {
+        alert("Action Plan Reminder: Take a moment to actively review all 4 checklist points. Rushing past the audit defeats the strategy!");
+        return;
+      }
+
+      clearInterval(quizTimerInterval);
+      const elapsedSec = Math.floor((Date.now() - quizStartTime) / 1000);
+      const mins = Math.floor(elapsedSec / 60);
+      const secs = elapsedSec % 60;
+
+      // Grade the answers
+      let totalFields = 0;
+      let correctFields = 0;
+      const breakdown = [];
+
+      quizQuestions.forEach((q, qIdx) => {
+        q.fields.forEach(f => {
+          totalFields++;
+          const userVal = quizUserAnswers[f.id] || "No answer chosen";
+          const isCorrect = userVal === f.correct;
+          if (isCorrect) correctFields++;
+          breakdown.push({
+            qNum: qIdx + 1,
+            label: f.label,
+            userVal,
+            correctVal: f.correct,
+            isCorrect
+          });
+        });
+      });
+
+      // Show Results
+      document.getElementById('quiz-coverup-container').classList.add('hidden');
+      const resultsWrap = document.getElementById('quiz-results-container');
+      resultsWrap.classList.remove('hidden');
+
+      const pct = Math.round((correctFields / totalFields) * 100);
+      document.getElementById('results-score-text').textContent = `Score: ${correctFields} / ${totalFields} (${pct}%)`;
+      document.getElementById('results-pacing-feedback').textContent = `Time Invested: ${mins} min ${secs} sec • Exam pacing habit executed!`;
+
+      // Save mastery to localStorage
+      const pastBest = parseInt(localStorage.getItem('statmaster_best_pct') || '-1', 10);
+      if (pct > pastBest) {
+        localStorage.setItem('statmaster_best_pct', pct);
+        localStorage.setItem('statmaster_best_score', `${correctFields}/${totalFields}`);
+      }
+      const pastCount = parseInt(localStorage.getItem('statmaster_completed_quizzes') || '0', 10) + 1;
+      localStorage.setItem('statmaster_completed_quizzes', pastCount);
+      updateMasteryDisplay();
+
+      // Confetti if high score
+      if (pct >= 80) {
+        confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
+        playTone(523);
+        setTimeout(() => playTone(659), 150);
+        setTimeout(() => playTone(784), 300);
+      } else {
+        playTone(300, 'square');
+      }
+
+      // Breakdown list
+      const listEl = document.getElementById('results-breakdown-list');
+      listEl.innerHTML = '';
+      breakdown.forEach(item => {
+        const row = document.createElement('div');
+        row.className = `p-3 rounded-xl border text-xs ${item.isCorrect ? 'bg-emerald-50/60 border-emerald-200' : 'bg-rose-50/60 border-rose-200'}`;
+        row.innerHTML = `
+          <div class="flex items-center justify-between font-bold mb-1">
+            <span class="${item.isCorrect ? 'text-emerald-800' : 'text-rose-800'}">Question ${item.qNum} - ${item.label}</span>
+            <span>${item.isCorrect ? '<i class="fa-solid fa-check text-emerald-600"></i> Correct' : '<i class="fa-solid fa-xmark text-rose-600"></i> Needs Review'}</span>
+          </div>
+          <div class="text-slate-600">Your choice: <span class="font-semibold ${item.isCorrect ? 'text-emerald-950' : 'text-rose-950'}">${item.userVal}</span></div>
+          ${!item.isCorrect ? `<div class="text-indigo-900 mt-1 font-semibold">Standard IM1 Answer: ${item.correctVal}</div>` : ''}
+        `;
+        listEl.appendChild(row);
+      });
+    }
+
+    function startNewQuiz() {
+      quizUserAnswers = {};
+      currentQuizIndex = 0;
+      quizHighlightedTokensCount = 0;
+      document.getElementById('quiz-results-container').classList.add('hidden');
+      document.getElementById('quiz-active-container').classList.remove('hidden');
+      startQuizTimer();
+      renderQuizQuestion();
+    }
+
+    // Window load initialization
+    window.onload = function() {
+      updateSoundIcon();
+      updateMasteryDisplay();
+      calcOutlierBounds();
+      renderMatchmakerProblem();
+      startQuizTimer();
+      renderQuizQuestion();
+    };
+  </script>
+</body>
+</html>
