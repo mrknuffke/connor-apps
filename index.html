@@ -362,8 +362,8 @@
             <p class="text-sm text-slate-500">Analyze the plot shape, select the appropriate statistics, and formulate an Illustrative Mathematics explanation.</p>
           </div>
           <button onclick="nextMatchmakerProblem()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-all flex items-center gap-2 shadow-sm">
-            <i class="fa-solid fa-shuffle"></i>
-            <span>New Distribution Scenario</span>
+            <i class="fa-solid fa-arrow-right"></i>
+            <span>Next Scenario (<span id="match-btn-counter">1 of 12</span>)</span>
           </button>
         </div>
 
@@ -476,8 +476,8 @@
             <p class="text-sm text-slate-500">The teacher noted: <em>"You understood how to plot data, but missed small execution details like scales, axis labels, and units."</em> Be the teacher and catch the errors!</p>
           </div>
           <button onclick="loadGraphAuditScenario()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-all flex items-center gap-2">
-            <i class="fa-solid fa-rotate-right"></i>
-            <span>Load Another Student Sample</span>
+            <i class="fa-solid fa-arrow-right"></i>
+            <span>Next Audit Case (<span id="audit-btn-counter">Case 1 of 8</span>)</span>
           </button>
         </div>
 
@@ -574,9 +574,13 @@
           <i class="fa-solid fa-stopwatch"></i>
         </div>
         <div>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-semibold border border-indigo-200 mb-2">
+            <i class="fa-solid fa-list-ol"></i>
+            <span id="quiz-launchpad-set-badge">Quiz Set 1 of 3: Questions 1–4 of 12</span>
+          </div>
           <h3 class="text-2xl font-black text-slate-900">4-Problem Paced Mini-Quiz</h3>
           <p class="text-sm text-slate-600 mt-2 max-w-lg mx-auto leading-relaxed">
-            Train under authentic exam conditions. Each time you start, 4 fresh randomized problems are drawn from the IM1 test bank.
+            Cycles sequentially through all 12 core IM1 curriculum questions across sessions with procedural data jitter, so every concept is practiced before repeating.
           </p>
         </div>
 
@@ -1376,6 +1380,8 @@
       currentMatchActiveData = { ...template, ...generated };
 
       document.getElementById('match-index').textContent = `${currentMatchIndex + 1} of ${matchmakerTemplates.length}`;
+      const btnCounter = document.getElementById('match-btn-counter');
+      if (btnCounter) btnCounter.textContent = `${currentMatchIndex + 1} of ${matchmakerTemplates.length}`;
       document.getElementById('match-plot-title').textContent = currentMatchActiveData.title;
       document.getElementById('match-context-tag').textContent = currentMatchActiveData.context;
       
@@ -1587,12 +1593,8 @@
     }
 
     function nextMatchmakerProblem() {
-      // Pick a random scenario different from the current one to ensure variation on every click
-      let nextIdx;
-      do {
-        nextIdx = Math.floor(Math.random() * matchmakerTemplates.length);
-      } while (nextIdx === currentMatchIndex && matchmakerTemplates.length > 1);
-      currentMatchIndex = nextIdx;
+      // Move sequentially through all 12 scenarios with procedural jitter on each render
+      currentMatchIndex = (currentMatchIndex + 1) % matchmakerTemplates.length;
       renderMatchmakerProblem();
     }
 
@@ -1604,155 +1606,230 @@
         id: 1,
         type: "Box Plot",
         title: "Backpack Weights of 15 Freshmen",
-        prompt: "Construct a box plot for backpack weights in pounds. Minimum = 6, Q1 = 12, Median = 18, Q3 = 24, Maximum = 38.",
         errorsPresent: ["uneven_scale", "missing_units"],
-        scaleIntervals: [0, 6, 12, 18, 24, 38],
         axisLabel: "Backpack Weights",
         hasTitle: true,
+        generate: () => {
+          const shift = Math.floor(Math.random() * 3); // 0, 1, 2
+          const s = [0, 6 + shift, 12 + shift, 18 + shift, 24 + shift, 38 + shift];
+          return {
+            scaleIntervals: s,
+            prompt: `Construct a box plot for backpack weights in pounds. Minimum = ${s[1]}, Q1 = ${s[2]}, Median = ${s[3]}, Q3 = ${s[4]}, Maximum = ${s[5]}.`,
+            explanation: `The student fell into two very common traps: (1) Scaling their axis with their five-number summary numbers (${s.join(', ')}) rather than an even mathematical interval (0, 5, 10, 15...). (2) Forgetting to indicate '(pounds)' on the axis label!`
+          };
+        },
         options: [
           { key: "uneven_scale", label: "Uneven Scale Intervals (ticks jump directly to data points instead of equal intervals like 0, 5, 10...)" },
           { key: "missing_units", label: "Missing Units on Axis Label (says 'Backpack Weights' instead of 'Backpack Weights (pounds)')" },
           { key: "wrong_median", label: "Median bar is incorrectly plotted at the Mean" },
           { key: "missing_title", label: "The entire graph is missing a descriptive Context Title" }
-        ],
-        explanation: "The student fell into two very common traps: (1) Scaling their axis with their five-number summary numbers (0, 6, 12, 18, 24, 38) rather than an even mathematical interval (0, 5, 10, 15...). (2) Forgetting to indicate '(pounds)' on the axis label!"
+        ]
       },
       {
         id: 2,
         type: "Histogram",
         title: "Weekly Screen Time of Students",
-        prompt: "Draw a histogram showing weekly screen time in hours with bin widths of 5 hours.",
         errorsPresent: ["missing_axis_label", "bar_gaps"],
-        scaleIntervals: [0, 5, 10, 15, 20, 25, 30],
         axisLabel: "",
         hasTitle: true,
         barGaps: true,
+        generate: () => {
+          const step = Math.random() > 0.5 ? 5 : 4;
+          const intervals = step === 5 ? [0, 5, 10, 15, 20, 25, 30] : [0, 4, 8, 12, 16, 20, 24];
+          return {
+            scaleIntervals: intervals,
+            prompt: `Draw a histogram showing weekly screen time in hours with uniform bin widths of ${step} hours (${intervals[0]}-${intervals[1]}, ${intervals[1]}-${intervals[2]}...).`,
+            explanation: "Histograms model continuous numerical data—the bars must TOUCH unless a frequency bin is zero! Furthermore, leaving an axis completely unlabeled loses critical execution points."
+          };
+        },
         options: [
           { key: "missing_axis_label", label: "Missing X-Axis Label completely (no mention of 'Screen Time (hours)')" },
           { key: "bar_gaps", label: "Gaps between histogram bars (histograms for continuous data must have touching bars)" },
           { key: "uneven_scale", label: "Uneven bin intervals (e.g. 5, then 12, then 20)" },
           { key: "wrong_y_scale", label: "Y-axis frequency counts are missing or inverted" }
-        ],
-        explanation: "Histograms model continuous numerical data—the bars must TOUCH unless a frequency bin is zero! Furthermore, leaving an axis completely unlabeled loses critical execution points."
+        ]
       },
       {
         id: 3,
         type: "Dot Plot",
         title: "Number of Siblings Reported by Freshmen",
-        prompt: "Draw a dot plot for student sibling counts: 0, 0, 1, 1, 1, 2, 2, 3, 5.",
         errorsPresent: ["uneven_dots", "missing_units"],
-        scaleIntervals: [0, 1, 2, 3, 4, 5],
         axisLabel: "Siblings",
         hasTitle: true,
+        scaleIntervals: [0, 1, 2, 3, 4, 5],
+        generate: () => {
+          const extra = Math.random() > 0.5 ? [1, 2] : [0, 2];
+          const pts = [0, 0, 1, 1, 1, 2, 2, 3, 5, ...extra].sort((a,b)=>a-b);
+          return {
+            prompt: `Draw a dot plot for student sibling counts: ${pts.join(', ')}.`,
+            explanation: "Dot plots convey quantity visually through height. If dots are drawn with different sizes or irregular spacing, columns look taller or shorter than they actually are! In addition, always specify full axis context (e.g., 'Number of Siblings')."
+          };
+        },
         options: [
           { key: "uneven_dots", label: "Uneven dot sizing and irregular vertical spacing (dots must be uniform size and spaced equally)" },
           { key: "missing_units", label: "Missing descriptive units on axis ('Number of Siblings')" },
           { key: "skipped_zero", label: "Forgot to include 0 on the number line" },
           { key: "wrong_type", label: "Drew a histogram instead of a dot plot" }
-        ],
-        explanation: "Dot plots convey quantity visually through height. If dots are drawn with different sizes or irregular spacing, columns look taller or shorter than they actually are! In addition, always specify full axis context (e.g., 'Number of Siblings')."
+        ]
       },
       {
         id: 4,
         type: "Box Plot",
         title: "Track 100-Meter Dash Sprint Times",
-        prompt: "Construct a box plot for 100m sprint times in seconds. Minimum = 11.8, Q1 = 12.2, Median = 12.6, Q3 = 13.0, Maximum = 14.0.",
         errorsPresent: ["wrong_median", "missing_units"],
-        scaleIntervals: [11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0],
         axisLabel: "Sprint Times",
         hasTitle: true,
         isWrongMedian: true,
+        generate: () => {
+          const base = Math.random() > 0.5 ? 11.0 : 10.0;
+          const min = (base + 0.8).toFixed(1);
+          const q1 = (base + 1.2).toFixed(1);
+          const med = (base + 1.6).toFixed(1);
+          const wrongMed = (base + 2.1).toFixed(1);
+          const q3 = (base + 2.0).toFixed(1);
+          const max = (base + 3.0).toFixed(1);
+          const intervals = [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0].map(v => (base + v).toFixed(1));
+          return {
+            scaleIntervals: intervals,
+            prompt: `Construct a box plot for 100m sprint times in seconds. Minimum = ${min}, Q1 = ${q1}, Median = ${med}, Q3 = ${q3}, Maximum = ${max}.`,
+            explanation: `The student accurately spaced their axis, but made two careless mistakes: placing the median divider line at the wrong number (${wrongMed} instead of ${med}) and omitting '(seconds)' from the axis label!`,
+            options: [
+              { key: "wrong_median", label: `Median bar is incorrectly plotted at ${wrongMed} instead of ${med}` },
+              { key: "missing_units", label: "Missing units on axis ('Sprint Times' instead of 'Sprint Times (seconds)')" },
+              { key: "uneven_scale", label: "Uneven scale ticks along the number line" },
+              { key: "missing_title", label: "Missing graph title" }
+            ]
+          };
+        },
         options: [
           { key: "wrong_median", label: "Median bar is incorrectly plotted at 13.1 instead of 12.6" },
           { key: "missing_units", label: "Missing units on axis ('Sprint Times' instead of 'Sprint Times (seconds)')" },
           { key: "uneven_scale", label: "Uneven scale ticks along the number line" },
           { key: "missing_title", label: "Missing graph title" }
-        ],
-        explanation: "The student accurately spaced their axis, but made two careless mistakes: placing the median divider line at the wrong number (13.1 instead of 12.6) and omitting '(seconds)' from the axis label!"
+        ]
       },
       {
         id: 5,
         type: "Histogram",
         title: "Daily Commute Distances of Teachers",
-        prompt: "Construct a histogram for commute distances with uniform 5-mile bin intervals: 0-5, 5-10, 10-15, 15-20, 20-25.",
         errorsPresent: ["uneven_scale", "missing_axis_label"],
-        scaleIntervals: [0, 5, 15, 20, 30],
         axisLabel: "",
         hasTitle: true,
         barGaps: false,
+        generate: () => {
+          const s = Math.random() > 0.5 ? [0, 5, 15, 20, 30] : [0, 4, 12, 16, 24];
+          return {
+            scaleIntervals: s,
+            prompt: `Construct a histogram for commute distances with uniform bin intervals (${s[0]}-${s[1]}, ${s[1]}-${s[1]*2}...).`,
+            explanation: `Histogram bins MUST have identical widths throughout the entire graph! Ticks jump unequally (${s.join(', ')}). Area indicates frequency, so unequal widths distort data visual weight. And axis labels cannot be omitted.`
+          };
+        },
         options: [
-          { key: "uneven_scale", label: "Unequal bin widths on the X-axis (jumping 5, then 10, then 5)" },
+          { key: "uneven_scale", label: "Unequal bin widths on the X-axis (intervals jump inconsistently)" },
           { key: "missing_axis_label", label: "Missing X-axis label completely ('Distance (miles)')" },
           { key: "bar_gaps", label: "Gaps between histogram bars" },
           { key: "wrong_title", label: "Title specifies the wrong units" }
-        ],
-        explanation: "Histogram bins MUST have identical widths throughout the entire graph! Shifting from a 5-unit bin to a 10-unit bin distorts the area of the bars. And axis labels cannot be omitted."
+        ]
       },
       {
         id: 6,
         type: "Dot Plot",
         title: "Number of Pets in Household",
-        prompt: "Construct a dot plot representing pet counts: 0, 1, 1, 2, 2, 2, 4, 5. Ensure number line is continuous.",
         errorsPresent: ["skipped_zero", "missing_units"],
         scaleIntervals: [0, 1, 2, 4, 5],
         axisLabel: "Pets",
         hasTitle: true,
+        generate: () => {
+          const shift = Math.random() > 0.5 ? 1 : 0;
+          const pts = [0, 1, 1, 2, 2, 2 + shift, 4, 5];
+          return {
+            prompt: `Construct a dot plot representing pet counts: ${pts.join(', ')}. Ensure number line is continuous.`,
+            explanation: "Never skip numbers on a number line just because there are zero data points! The space for 3 pets must remain on the axis to accurately show the visual gap in data."
+          };
+        },
         options: [
           { key: "skipped_zero", label: "Skipped number 3 on the number line because frequency was zero" },
           { key: "missing_units", label: "Missing descriptive units on axis ('Number of Pets')" },
           { key: "uneven_dots", label: "Dots are drawn with different shapes" },
           { key: "missing_title", label: "Title is missing" }
-        ],
-        explanation: "Never skip numbers on a number line just because there are zero data points! The space for 3 pets must remain on the axis to accurately show the visual gap in data."
+        ]
       },
       {
         id: 7,
         type: "Box Plot",
         title: "Freshman Bowling Scores",
-        prompt: "Construct a box plot for bowling scores: Min = 80, Q1 = 95, Median = 110, Q3 = 125, Max = 150.",
         errorsPresent: ["missing_title", "missing_units"],
-        scaleIntervals: [70, 80, 90, 100, 110, 120, 130, 140, 150, 160],
         axisLabel: "Bowling Scores",
         hasTitle: false,
+        generate: () => {
+          const shift = Math.floor(Math.random() * 3) * 5; // 0, 5, 10
+          const min = 80 + shift;
+          const q1 = 95 + shift;
+          const med = 110 + shift;
+          const q3 = 125 + shift;
+          const max = 150 + shift;
+          const scale = [70, 80, 90, 100, 110, 120, 130, 140, 150, 160].map(v => v + shift);
+          return {
+            scaleIntervals: scale,
+            prompt: `Construct a box plot for bowling scores: Min = ${min}, Q1 = ${q1}, Median = ${med}, Q3 = ${q3}, Max = ${max}.`,
+            explanation: "Even if your 5-number summary is plotted flawlessly, missing both the graph title and the axis units forfeits 20-30% of credit on standard IM1 scoring rubrics!"
+          };
+        },
         options: [
           { key: "missing_title", label: "Missing graph title completely (no context provided)" },
           { key: "missing_units", label: "Missing units on axis label ('Bowling Scores (points)')" },
           { key: "uneven_scale", label: "Uneven scale tick spacing" },
           { key: "wrong_median", label: "Median bar is omitted" }
-        ],
-        explanation: "Even if your 5-number summary is plotted flawlessly, missing both the graph title and the axis units forfeits 20-30% of credit on standard IM1 scoring rubrics!"
+        ]
       },
       {
         id: 8,
         type: "Histogram",
         title: "Smartphone Battery Life (Hours)",
-        prompt: "Draw a continuous histogram showing smartphone battery durations in hours.",
         errorsPresent: ["bar_gaps", "missing_units"],
         scaleIntervals: [10, 15, 20, 25, 30, 35],
         axisLabel: "Battery Life",
         hasTitle: true,
         barGaps: true,
+        generate: () => {
+          const shift = Math.random() > 0.5 ? 5 : 0;
+          const scale = [10 + shift, 15 + shift, 20 + shift, 25 + shift, 30 + shift, 35 + shift];
+          return {
+            scaleIntervals: scale,
+            prompt: `Draw a continuous histogram showing smartphone battery durations in hours (bins: ${scale[0]}-${scale[1]}, ${scale[1]}-${scale[2]}...).`,
+            explanation: "Battery life is continuous data. Drawing separated bars treats it like a discrete categorical bar graph! The bars must touch, and units '(hours)' must be explicitly written."
+          };
+        },
         options: [
           { key: "bar_gaps", label: "Gaps between histogram bars for continuous numerical data" },
           { key: "missing_units", label: "Missing units on axis label ('Battery Life (hours)')" },
           { key: "uneven_scale", label: "Interval sizes vary" },
           { key: "missing_title", label: "Missing graph title" }
-        ],
-        explanation: "Battery life is continuous data. Drawing separated bars treats it like a discrete categorical bar graph! The bars must touch, and units '(hours)' must be explicitly written."
+        ]
       }
     ];
 
     let currentAuditIndex = 0;
+    let currentAuditActiveData = null;
 
     function renderGraphAuditScenario() {
-      const scenario = auditScenarios[currentAuditIndex];
-      document.getElementById('audit-graph-type').textContent = `Plot Type: ${scenario.type}`;
+      const template = auditScenarios[currentAuditIndex];
+      const generated = typeof template.generate === 'function' ? template.generate() : {};
+      const scenario = { ...template, ...generated };
+      currentAuditActiveData = scenario;
+
+      const btnCounter = document.getElementById('audit-btn-counter');
+      if (btnCounter) {
+        btnCounter.textContent = `Case ${currentAuditIndex + 1} of ${auditScenarios.length}`;
+      }
+      document.getElementById('audit-graph-type').textContent = `Audit Case ${currentAuditIndex + 1} of ${auditScenarios.length} • Plot Type: ${scenario.type}`;
       document.getElementById('audit-title-display').textContent = scenario.hasTitle ? scenario.title : '(No Title Provided)';
       document.getElementById('audit-prompt-text').textContent = `"${scenario.prompt}"`;
       document.getElementById('audit-feedback-result').className = 'hidden';
 
       // Shuffle options so user actively reads every time
-      const shuffledOptions = [...scenario.options].sort(() => Math.random() - 0.5);
+      const baseOptions = scenario.options || template.options;
+      const shuffledOptions = [...baseOptions].sort(() => Math.random() - 0.5);
 
       const group = document.getElementById('audit-checkbox-group');
       group.innerHTML = '';
@@ -1928,7 +2005,7 @@
     }
 
     function evaluateGraphAudit() {
-      const scenario = auditScenarios[currentAuditIndex];
+      const scenario = currentAuditActiveData || auditScenarios[currentAuditIndex];
       const selected = Array.from(document.querySelectorAll('.audit-flaw-chk:checked')).map(el => el.value);
       const res = document.getElementById('audit-feedback-result');
 
@@ -1958,11 +2035,8 @@
     }
 
     function loadGraphAuditScenario() {
-      let nextIdx;
-      do {
-        nextIdx = Math.floor(Math.random() * auditScenarios.length);
-      } while (nextIdx === currentAuditIndex && auditScenarios.length > 1);
-      currentAuditIndex = nextIdx;
+      // Move sequentially through all 8 audit scenarios with procedural jitter on each render
+      currentAuditIndex = (currentAuditIndex + 1) % auditScenarios.length;
       renderGraphAuditScenario();
     }
 
@@ -2195,7 +2269,157 @@
             correct: "Both classes have the same typical center (median 82), but Period 2 has much greater variability in scores (IQR 18 vs 6)."
           }
         ]
-      })
+      }),
+
+      // Type 9: Dot Plot Number Line Continuity
+      () => {
+        const zeroItem = ["books read over summer", "hours spent volunteering", "concerts attended", "sibling counts"][Math.floor(Math.random() * 4)];
+        return {
+          title: "Dot Plot Execution: Continuous Number Line Principle",
+          promptText: `A student surveyed classmates about ${zeroItem} and collected: 0, 1, 1, 2, 4, 5. Because nobody reported '3', the student omitted 3 from the horizontal number line, drawing tick marks at 0, 1, 2, 4, 5. Why is omitting 3 an execution error on an IM1 exam?`,
+          actionTokens: ["omitted 3 from the horizontal number line", "execution error", "IM1 exam"],
+          hasGraphic: false,
+          fields: [
+            {
+              id: "q9_dot_rule",
+              label: "Part A: Identify the core mathematical graphing error:",
+              type: "select",
+              options: [
+                "Select...",
+                "A number line must maintain a continuous, uniform mathematical scale. Values with a frequency of 0 must still occupy their equal space.",
+                "The student should have plotted a zero directly on top of 3.",
+                "Omitting 3 is completely acceptable since there was no data to display."
+              ],
+              correct: "A number line must maintain a continuous, uniform mathematical scale. Values with a frequency of 0 must still occupy their equal space."
+            },
+            {
+              id: "q9_visual_impact",
+              label: "Part B: What visual distortion does skipping 3 cause?",
+              type: "select",
+              options: [
+                "Select...",
+                "It eliminates the visual gap in the data, falsely suggesting the data is uniform rather than separated.",
+                "It makes the dots look like squares.",
+                "It changes the median into the standard deviation."
+              ],
+              correct: "It eliminates the visual gap in the data, falsely suggesting the data is uniform rather than separated."
+            }
+          ]
+        };
+      },
+
+      // Type 10: 1.5 x IQR Lower Fence Outlier Verification
+      () => {
+        const q1 = 28 + Math.floor(Math.random() * 6);
+        const q3 = 48 + Math.floor(Math.random() * 6);
+        const iqr = q3 - q1;
+        const lowerFence = Math.round((q1 - (1.5 * iqr)) * 10) / 10;
+        const testVal = Math.round(lowerFence - 5);
+        return {
+          title: "1.5 × IQR Lower Outlier Boundary Verification",
+          promptText: `A chemistry experiment measured reaction times with Q1 = ${q1} seconds and Q3 = ${q3} seconds. Calculate the Lower Outlier Boundary using the 1.5 × IQR rule (Lower Fence = Q1 - 1.5 × IQR), and determine if an unusually fast reaction time of ${testVal} seconds qualifies as an official outlier.`,
+          actionTokens: ["Calculate the Lower Outlier Boundary", "using the 1.5 × IQR rule", "Lower Fence = Q1 - 1.5 × IQR", "determine if", "qualifies as an official outlier"],
+          hasGraphic: false,
+          fields: [
+            {
+              id: "q10_fence",
+              label: "Part A: What is the calculated Lower Outlier Fence? (Q1 - 1.5 × IQR)",
+              type: "select",
+              options: ["Select...", `${lowerFence} seconds`, `${lowerFence + 4} seconds`, `${q1 - iqr} seconds`, `${lowerFence - 8} seconds`],
+              correct: `${lowerFence} seconds`
+            },
+            {
+              id: "q10_verdict",
+              label: `Part B: Is ${testVal} seconds an official low outlier?`,
+              type: "select",
+              options: [
+                "Select...",
+                `Yes, because ${testVal} < ${lowerFence} seconds (it falls below the Lower Outlier Fence).`,
+                `No, because reaction times cannot be outliers.`,
+                `No, because ${testVal} is greater than zero.`
+              ],
+              correct: `Yes, because ${testVal} < ${lowerFence} seconds (it falls below the Lower Outlier Fence).`
+            }
+          ]
+        };
+      },
+
+      // Type 11: Outlier Impact on Mean vs Median
+      () => {
+        const salaryBase = 50 + Math.floor(Math.random() * 10);
+        const ceoSalary = 1500 + Math.floor(Math.random() * 500);
+        return {
+          title: "Analyzing the Impact of an Extreme Outlier on Center",
+          promptText: `A local branch office employs 12 staff members with salaries clustered closely between $${salaryBase},000 and $${salaryBase + 15},000 (Mean = $${salaryBase + 7},000, Median = $${salaryBase + 7},000). A corporate executive earning $${ceoSalary},000 is newly assigned to this branch. Analyze the mathematical impact on the Mean and the Median.`,
+          actionTokens: ["salaries clustered closely", "corporate executive earning", "mathematical impact on the Mean and the Median"],
+          hasGraphic: false,
+          fields: [
+            {
+              id: "q11_mean_impact",
+              label: "Part A: How does the new extreme salary impact the MEAN?",
+              type: "select",
+              options: [
+                "Select...",
+                "The Mean increases dramatically because it sums all values and is non-resistant to high outliers.",
+                "The Mean stays exactly the same.",
+                "The Mean decreases because the company has more employees."
+              ],
+              correct: "The Mean increases dramatically because it sums all values and is non-resistant to high outliers."
+            },
+            {
+              id: "q11_median_impact",
+              label: "Part B: How does the new extreme salary impact the MEDIAN?",
+              type: "select",
+              options: [
+                "Select...",
+                "The Median remains almost unchanged because it relies on positional rank and is resistant to extreme values.",
+                "The Median increases by the exact same amount as the mean.",
+                "The Median doubles immediately."
+              ],
+              correct: "The Median remains almost unchanged because it relies on positional rank and is resistant to extreme values."
+            }
+          ]
+        };
+      },
+
+      // Type 12: Standard Deviation Interpretation & Consistency
+      () => {
+        const meanTime = 20 + Math.floor(Math.random() * 5);
+        const sdA = 0.8;
+        const sdB = 3.6;
+        return {
+          title: "Standard Deviation Interpretation: Consistency & Spread",
+          promptText: `Runner A and Runner B each complete ten 5-kilometer training runs. Both runners have the exact same average time of ${meanTime} minutes. Runner A's times have a Standard Deviation of ${sdA} minutes, while Runner B's times have a Standard Deviation of ${sdB} minutes. Evaluate their consistency and explain what Standard Deviation signifies.`,
+          actionTokens: ["exact same average time", "Standard Deviation", "Evaluate their consistency", "explain what Standard Deviation signifies"],
+          hasGraphic: false,
+          fields: [
+            {
+              id: "q12_consistency",
+              label: "Part A: Which runner is more consistent in their race times?",
+              type: "select",
+              options: [
+                "Select...",
+                `Runner A is more consistent because a smaller Standard Deviation (${sdA} vs ${sdB}) means times are clustered closer to the mean.`,
+                `Runner B is more consistent because a higher Standard Deviation represents stronger performance.`,
+                "Both runners are equally consistent because they have the same average time."
+              ],
+              correct: `Runner A is more consistent because a smaller Standard Deviation (${sdA} vs ${sdB}) means times are clustered closer to the mean.`
+            },
+            {
+              id: "q12_sd_concept",
+              label: "Part B: In statistics, Standard Deviation specifically measures:",
+              type: "select",
+              options: [
+                "Select...",
+                "The typical distance of data values from the mean.",
+                "The distance between the maximum and minimum values.",
+                "The middle 50% of ordered data points."
+              ],
+              correct: "The typical distance of data values from the mean."
+            }
+          ]
+        };
+      }
     ];
 
     let currentQuizIndex = 0;
@@ -2205,6 +2429,18 @@
     let quizTimerInterval = null;
     let quizHighlightedTokensCount = 0;
 
+    function updateQuizLaunchpadBadge() {
+      const cursor = parseInt(localStorage.getItem('statmaster_quiz_cursor') || '0', 10);
+      const badge = document.getElementById('quiz-launchpad-set-badge');
+      if (badge && questionBank.length > 0) {
+        const setNum = Math.floor(cursor / 4) + 1;
+        const totalSets = Math.ceil(questionBank.length / 4);
+        const startQ = cursor + 1;
+        const endQ = Math.min(cursor + 4, questionBank.length);
+        badge.textContent = `Quiz Set ${setNum} of ${totalSets}: Questions ${startQ}–${endQ} of ${questionBank.length}`;
+      }
+    }
+
     function startQuizSession() {
       // Transition from Launchpad to Active Quiz
       document.getElementById('quiz-intro-container').classList.add('hidden');
@@ -2212,9 +2448,17 @@
       document.getElementById('quiz-coverup-container').classList.add('hidden');
       document.getElementById('quiz-results-container').classList.add('hidden');
 
-      // Sample 4 random questions without duplicates
-      const shuffledIndices = [...Array(questionBank.length).keys()].sort(() => Math.random() - 0.5);
-      quizActiveQuestions = shuffledIndices.slice(0, 4).map(idx => questionBank[idx]());
+      // Move sequentially through the 12 questions in questionBank (4 per session)
+      let cursor = parseInt(localStorage.getItem('statmaster_quiz_cursor') || '0', 10);
+      quizActiveQuestions = [];
+      for (let i = 0; i < 4; i++) {
+        const qIndex = (cursor + i) % questionBank.length;
+        quizActiveQuestions.push(questionBank[qIndex]());
+      }
+
+      // Advance cursor for next session so each question is encountered once before returning
+      const nextCursor = (cursor + 4) % questionBank.length;
+      localStorage.setItem('statmaster_quiz_cursor', nextCursor);
 
       currentQuizIndex = 0;
       quizUserAnswers = {};
@@ -2473,6 +2717,15 @@
         `;
         listEl.appendChild(row);
       });
+
+      // Update next set button
+      const nextBtn = document.getElementById('quiz-results-next-btn');
+      const cursor = parseInt(localStorage.getItem('statmaster_quiz_cursor') || '0', 10);
+      const nextSetNum = Math.floor(cursor / 4) + 1;
+      const totalSets = Math.ceil(questionBank.length / 4);
+      if (nextBtn) {
+        nextBtn.innerHTML = `<i class="fa-solid fa-arrow-right mr-1.5"></i> Proceed to Quiz Set ${nextSetNum} of ${totalSets}`;
+      }
     }
 
     function startNewQuiz() {
@@ -2482,6 +2735,7 @@
       if (quizTimerInterval) clearInterval(quizTimerInterval);
       const timerEl = document.getElementById('quiz-timer');
       if (timerEl) timerEl.textContent = "00:00";
+      updateQuizLaunchpadBadge();
     }
 
     // Window load initialization
@@ -2491,6 +2745,7 @@
       calcOutlierBounds();
       renderMatchmakerProblem();
       renderGraphAuditScenario();
+      updateQuizLaunchpadBadge();
       // Pacing timer is intentionally NOT started here; starts only upon clicking Begin Mini-Quiz!
     };
   </script>
