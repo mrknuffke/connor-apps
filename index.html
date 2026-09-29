@@ -50,17 +50,38 @@
       border-radius: 9999px;
     }
     @media print {
-      header, nav, #print-sheet-btn, #sound-btn, button, .no-print {
+      header, nav, #print-sheet-btn, #sound-btn, button, .no-print, #report-modal-close, #report-modal-actions {
         display: none !important;
       }
       body {
         background: white !important;
         color: black !important;
       }
-      #view-anchor {
+      /* If printing report */
+      body.printing-report #report-modal {
+        display: block !important;
+        position: static !important;
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+      }
+      body.printing-report #report-modal > div {
+        border: none !important;
+        box-shadow: none !important;
+        max-height: none !important;
+        width: 100% !important;
+      }
+      body.printing-report main, body.printing-report header {
+        display: none !important;
+      }
+      /* If printing standard view (not report) */
+      body:not(.printing-report) #view-anchor {
         display: block !important;
       }
-      #view-match, #view-graphAudit, #view-quiz {
+      body:not(.printing-report) #view-match, 
+      body:not(.printing-report) #view-graphAudit, 
+      body:not(.printing-report) #view-quiz {
         display: none !important;
       }
       .shadow-sm, .shadow-md, .shadow-xl {
@@ -95,9 +116,9 @@
         <button id="sound-btn" onclick="toggleSound()" title="Toggle Sound FX" class="w-8 h-8 rounded-lg bg-indigo-800/80 hover:bg-indigo-700 border border-indigo-700 flex items-center justify-center text-xs transition-colors">
           <i id="sound-icon" class="fa-solid fa-volume-high"></i>
         </button>
-        <button id="print-sheet-btn" onclick="printStudySheet()" title="Print Study Binder Sheet" class="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-800/80 hover:bg-indigo-700 border border-indigo-700 transition-colors">
-          <i class="fa-solid fa-print"></i>
-          <span>Print Sheet</span>
+        <button id="print-sheet-btn" onclick="openReportModal()" title="View & Print Study & Performance Report" class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-amber-400 hover:bg-amber-300 text-slate-950 transition-colors shadow-sm font-bold">
+          <i class="fa-solid fa-file-lines text-slate-900"></i>
+          <span>Study Report</span>
         </button>
       </div>
 
@@ -547,8 +568,43 @@
         </div>
       </div>
 
+      <!-- Quiz Intro Launchpad -->
+      <div id="quiz-intro-container" class="bg-white rounded-2xl p-6 md:p-8 border border-slate-200 shadow-sm text-center max-w-2xl mx-auto space-y-6">
+        <div class="w-16 h-16 bg-indigo-100 text-indigo-700 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-inner">
+          <i class="fa-solid fa-stopwatch"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-black text-slate-900">4-Problem Paced Mini-Quiz</h3>
+          <p class="text-sm text-slate-600 mt-2 max-w-lg mx-auto leading-relaxed">
+            Train under authentic exam conditions. Each time you start, 4 fresh randomized problems are drawn from the IM1 test bank.
+          </p>
+        </div>
+
+        <div class="grid sm:grid-cols-3 gap-3 text-left">
+          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <span class="text-xs font-bold text-indigo-700 block mb-1">⏱️ Anti-Rush Clock</span>
+            <p class="text-[11px] text-slate-500 leading-snug">Timer starts only when you click Begin. Work methodically!</p>
+          </div>
+          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <span class="text-xs font-bold text-amber-700 block mb-1">🖍️ Active Marking</span>
+            <p class="text-[11px] text-slate-500 leading-snug">Click words in the prompt to highlight action verbs and units.</p>
+          </div>
+          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <span class="text-xs font-bold text-emerald-700 block mb-1">🛡️ Cover-Up Audit</span>
+            <p class="text-[11px] text-slate-500 leading-snug">Shield your paper before submitting to catch free-point leaks.</p>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <button onclick="startQuizSession()" class="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm shadow-md hover:shadow-lg transition-all inline-flex items-center gap-2">
+            <i class="fa-solid fa-play"></i>
+            <span>Begin Mini-Quiz Now</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Quiz Questions Stage -->
-      <div id="quiz-active-container" class="space-y-6">
+      <div id="quiz-active-container" class="space-y-6 hidden">
         <!-- Question Card -->
         <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
           <!-- Question Top Bar -->
@@ -715,6 +771,40 @@
 
   </main>
 
+  <!-- ============================================================== -->
+  <!-- STUDY & PERFORMANCE REPORT MODAL                              -->
+  <!-- ============================================================== -->
+  <div id="report-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 no-print">
+    <div class="relative bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+      <!-- Modal Top Bar -->
+      <div class="bg-indigo-900 text-white px-6 py-4 flex items-center justify-between no-print">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-indigo-700 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-file-invoice text-amber-400"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-base">Connor's Study &amp; Readiness Report</h3>
+            <p class="text-xs text-indigo-200">Integrated Math 1 • Unit 1: One-Variable Statistics</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2" id="report-modal-actions">
+          <button onclick="printCurrentReport()" class="px-3.5 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-lg text-xs transition-colors flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-print"></i>
+            <span>Print / Save PDF</span>
+          </button>
+          <button onclick="closeReportModal()" id="report-modal-close" class="w-8 h-8 rounded-lg bg-indigo-800 hover:bg-indigo-700 flex items-center justify-center text-indigo-200 hover:text-white transition-colors">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Report Printable Area -->
+      <div id="report-printable-area" class="p-6 overflow-y-auto space-y-6 text-slate-800">
+        <!-- Injected dynamically by generateReportHTML() -->
+      </div>
+    </div>
+  </div>
+
   <script>
     // Tab Switching Logic
     function switchTab(tabId) {
@@ -753,14 +843,6 @@
       }
     }
 
-    function printStudySheet() {
-      switchTab('anchor');
-      setTimeout(() => {
-        window.print();
-      }, 150);
-    }
-
-    // Sound effect helper (Web Audio API synthetic beeps)
     function playTone(freq, type = 'sine', duration = 0.15) {
       if (!soundEnabled) return;
       try {
@@ -781,115 +863,179 @@
     }
 
     // ==========================================================
-    // MODULE 1: MATCHMAKER (Center vs. Spread + Writing Builder)
+    // REPORT MODAL LOGIC (STUDY & READINESS RECORD)
     // ==========================================================
-    const matchmakerScenarios = [
-      {
-        id: 1,
-        title: "Daily Study Hours for Freshmen (Hours)",
-        context: "Survey of 30 Students",
-        shapeType: "skewed", // skewed right by 2 extreme grinders
-        correctCenter: "median",
-        correctSpread: "iqr",
-        dataPoints: [0.5, 1, 1, 1.5, 1.5, 1.5, 2, 2, 2, 2, 2.5, 2.5, 3, 3, 7.5, 8.0],
-        units: "hours",
-        hasOutlier: true,
-        outlierDesc: "Two high outliers at 7.5 and 8.0 hours pull the tail to the right.",
-        plotType: "dotplot",
-        xMin: 0,
-        xMax: 9,
-        step: 1
-      },
-      {
-        id: 2,
-        title: "Heights of Basketball Team Members (Inches)",
-        context: "Varsity Roster Heights",
-        shapeType: "symmetric",
-        correctCenter: "mean",
-        correctSpread: "sd",
-        dataPoints: [68, 69, 70, 70, 71, 71, 71, 72, 72, 72, 72, 73, 73, 74, 74, 75, 76],
-        units: "inches",
-        hasOutlier: false,
-        outlierDesc: "Evenly balanced bell distribution around 72 inches with no outliers.",
-        plotType: "dotplot",
-        xMin: 66,
-        xMax: 78,
-        step: 2
-      },
-      {
-        id: 3,
-        title: "Miles Driven on a Full Tank of Gas (Miles)",
-        context: "Highway Commuter Sedan Fleet",
-        shapeType: "skewed", // low outlier because of a leak
-        correctCenter: "median",
-        correctSpread: "iqr",
-        dataPoints: [110, 360, 370, 380, 385, 390, 390, 400, 405, 410, 420],
-        units: "miles",
-        hasOutlier: true,
-        outlierDesc: "One severe low outlier at 110 miles skews the data left.",
-        plotType: "histogram",
-        bins: [
-          { from: 100, to: 150, count: 1 },
-          { from: 150, to: 200, count: 0 },
-          { from: 200, to: 250, count: 0 },
-          { from: 250, to: 300, count: 0 },
-          { from: 300, to: 350, count: 0 },
-          { from: 350, to: 400, count: 7 },
-          { from: 400, to: 450, count: 3 }
-        ],
-        xMin: 100,
-        xMax: 450,
-        step: 50
-      },
-      {
-        id: 4,
-        title: "Mass of Standard Factory Bolts (Grams)",
-        context: "Precision Quality Control Check",
-        shapeType: "symmetric",
-        correctCenter: "mean",
-        correctSpread: "sd",
-        dataPoints: [24.8, 24.9, 24.9, 25.0, 25.0, 25.0, 25.0, 25.1, 25.1, 25.2],
-        units: "grams",
-        hasOutlier: false,
-        outlierDesc: "Normal mound centered cleanly at 25.0 grams.",
-        plotType: "dotplot",
-        xMin: 24.5,
-        xMax: 25.5,
-        step: 0.2
-      },
-      {
-        id: 5,
-        title: "Home Sale Prices in a Suburban Neighborhood ($ Thousands)",
-        context: "County Real Estate Records",
-        shapeType: "skewed",
-        correctCenter: "median",
-        correctSpread: "iqr",
-        dataPoints: [280, 290, 310, 315, 320, 325, 330, 340, 350, 850, 920],
-        units: "$ thousands",
-        hasOutlier: true,
-        outlierDesc: "Two multi-million dollar luxury estates at $850k and $920k pull the tail heavily to the right.",
-        plotType: "dotplot",
-        xMin: 200,
-        xMax: 1000,
-        step: 100
-      },
-      {
-        id: 6,
-        title: "Diameter of Tennis Balls from Standard Production (Centimeters)",
-        context: "Tournament Quality Assurance",
-        shapeType: "symmetric",
-        correctCenter: "mean",
-        correctSpread: "sd",
-        dataPoints: [6.60, 6.62, 6.64, 6.65, 6.66, 6.67, 6.68, 6.68, 6.70, 6.72],
-        units: "cm",
-        hasOutlier: false,
-        outlierDesc: "Uniform bell distribution tightly grouped around 6.66 cm with no outliers.",
-        plotType: "dotplot",
-        xMin: 6.55,
-        xMax: 6.75,
-        step: 0.05
+    function openReportModal() {
+      const modal = document.getElementById('report-modal');
+      const area = document.getElementById('report-printable-area');
+      if (!modal || !area) return;
+      area.innerHTML = generateReportHTML();
+      modal.classList.remove('hidden');
+    }
+
+    function closeReportModal() {
+      const modal = document.getElementById('report-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function printCurrentReport() {
+      document.body.classList.add('printing-report');
+      window.print();
+      setTimeout(() => {
+        document.body.classList.remove('printing-report');
+      }, 500);
+    }
+
+    function generateReportHTML() {
+      const now = new Date().toLocaleDateString(undefined, { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+      });
+      const bestScore = localStorage.getItem('statmaster_best_score') || 'None yet';
+      const bestPct = parseInt(localStorage.getItem('statmaster_best_pct') || '0', 10);
+      const totalQuizzes = localStorage.getItem('statmaster_completed_quizzes') || '0';
+      const lastBreakdownRaw = localStorage.getItem('statmaster_last_quiz_breakdown');
+      const lastBreakdown = lastBreakdownRaw ? JSON.parse(lastBreakdownRaw) : null;
+      const lastDuration = localStorage.getItem('statmaster_last_duration') || 'N/A';
+
+      let quizHistoryHtml = '';
+      if (lastBreakdown && lastBreakdown.length > 0) {
+        const correctCount = lastBreakdown.filter(b => b.isCorrect).length;
+        const totalCount = lastBreakdown.length;
+        quizHistoryHtml = `
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-indigo-600"></i>
+                Latest Paced Mini-Quiz Audit (${correctCount}/${totalCount} - ${Math.round((correctCount/totalCount)*100)}%)
+              </h4>
+              <span class="text-xs text-slate-500 font-mono">Paced Time: ${lastDuration}</span>
+            </div>
+            <div class="space-y-2">
+              ${lastBreakdown.map((item, idx) => `
+                <div class="p-2.5 rounded-lg border text-xs ${item.isCorrect ? 'bg-emerald-50/70 border-emerald-200' : 'bg-rose-50/70 border-rose-200'}">
+                  <div class="flex justify-between font-semibold mb-0.5">
+                    <span class="${item.isCorrect ? 'text-emerald-900' : 'text-rose-900'}">Problem ${idx + 1}: ${item.label}</span>
+                    <span class="${item.isCorrect ? 'text-emerald-700' : 'text-rose-700'}">${item.isCorrect ? '✓ Correct' : '✗ Review Required'}</span>
+                  </div>
+                  <div class="text-[11px] text-slate-600">Student Response: <span class="font-medium text-slate-900">${item.userVal}</span></div>
+                  ${!item.isCorrect ? `<div class="text-[11px] text-indigo-900 font-medium mt-0.5">Required IM1 Solution: ${item.correctVal}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        quizHistoryHtml = `
+          <div class="p-4 bg-amber-50/60 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed">
+            <i class="fa-solid fa-circle-info mr-1 text-amber-600"></i>
+            No mini-quizzes completed in this session yet. Complete the 4-problem Paced Mini-Quiz to record an itemized performance audit!
+          </div>
+        `;
       }
-    ];
+
+      return `
+        <!-- Report Header -->
+        <div class="border-b border-slate-200 pb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded border border-indigo-100">
+                Official Study &amp; Assessment Readiness Record
+              </span>
+              <span class="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded">Reassessment Prep</span>
+            </div>
+            <h2 class="text-2xl font-black text-slate-900 mt-1">Connor Knuffke: IM1 Statistics Mastery Report</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Integrated Math 1 • Unit 1: One-Variable Statistics • Generated ${now}</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs uppercase font-bold text-slate-400 block tracking-wider">Overall Status</span>
+            <span class="text-sm font-extrabold ${bestPct >= 75 ? 'text-emerald-600' : 'text-indigo-600'}">
+              ${bestPct >= 75 ? 'Ready For Reassessment ★' : 'Active Practice Mode'}
+            </span>
+          </div>
+        </div>
+
+        <!-- Metric Snapshot Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
+            <span class="text-[10px] font-bold uppercase text-slate-400 block">Quizzes Taken</span>
+            <span class="text-lg font-black text-slate-800 font-mono mt-0.5 block">${totalQuizzes}</span>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
+            <span class="text-[10px] font-bold uppercase text-slate-400 block">Personal Best</span>
+            <span class="text-lg font-black text-emerald-600 font-mono mt-0.5 block">${bestScore}</span>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
+            <span class="text-[10px] font-bold uppercase text-slate-400 block">Pacing Habit</span>
+            <span class="text-xs font-bold text-indigo-700 mt-1.5 block">Anti-Rush Verified</span>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
+            <span class="text-[10px] font-bold uppercase text-slate-400 block">Cover-Up Protocol</span>
+            <span class="text-xs font-bold text-amber-600 mt-1.5 block">Shield &amp; Audit</span>
+          </div>
+        </div>
+
+        <!-- Competency Matrix Aligned to Teacher Focus -->
+        <div>
+          <h4 class="font-bold text-slate-900 text-sm mb-2.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-graduation-cap text-indigo-600"></i>
+            Teacher's Key Reassessment Objectives Audit
+          </h4>
+          <div class="grid sm:grid-cols-2 gap-3 text-xs">
+            <div class="p-3 rounded-xl border border-slate-200 bg-white">
+              <div class="flex items-center justify-between mb-1">
+                <strong class="text-slate-800">1. Shape Dictates Statistics Pairing</strong>
+                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Mastered</span>
+              </div>
+              <p class="text-slate-500 text-[11px] leading-relaxed">
+                • <strong>Symmetric:</strong> Mean (Center) &amp; Standard Deviation (Variability)<br>
+                • <strong>Skewed / Outliers:</strong> Median (Center) &amp; IQR (Variability)
+              </p>
+            </div>
+
+            <div class="p-3 rounded-xl border border-slate-200 bg-white">
+              <div class="flex items-center justify-between mb-1">
+                <strong class="text-slate-800">2. Vocabulary Category Labeling</strong>
+                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Trained</span>
+              </div>
+              <p class="text-slate-500 text-[11px] leading-relaxed">
+                Always writes the exact category name: "IQR is the measure of <em>variability</em>", "Median is the measure of <em>center</em>".
+              </p>
+            </div>
+
+            <div class="p-3 rounded-xl border border-slate-200 bg-white">
+              <div class="flex items-center justify-between mb-1">
+                <strong class="text-slate-800">3. Outlier Boundary Proof (1.5 &times; IQR)</strong>
+                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Formula Ready</span>
+              </div>
+              <p class="text-slate-500 text-[11px] leading-relaxed font-mono">
+                IQR = Q3 - Q1<br>
+                Fences = [Q1 - 1.5&times;IQR, Q3 + 1.5&times;IQR]
+              </p>
+            </div>
+
+            <div class="p-3 rounded-xl border border-slate-200 bg-white">
+              <div class="flex items-center justify-between mb-1">
+                <strong class="text-slate-800">4. Execution Leak Prevention</strong>
+                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Active Audit</span>
+              </div>
+              <p class="text-slate-500 text-[11px] leading-relaxed">
+                • Even interval tick spacing on axes (no skipping)<br>
+                • Contextual units in parentheses (e.g., 'Time (minutes)')
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Latest Quiz Audit Breakdown -->
+        ${quizHistoryHtml}
+
+        <!-- Footer Sign-off Note for Student & Parent -->
+        <div class="pt-3 border-t border-slate-200 flex justify-between items-center text-[11px] text-slate-500">
+          <span>IM1 StatMaster • Interactive Mathematics Test Prep Tool</span>
+          <span class="font-semibold text-slate-700">Ready for Teacher Reassessment Review</span>
+        </div>
+      `;
+    }
 
     // Mastery tracking and display
     function updateMasteryDisplay() {
@@ -962,18 +1108,277 @@
       `;
     }
 
+    // ==========================================================
+    // MODULE 1: MATCHMAKER (Center vs. Spread with Dynamic Variations)
+    // ==========================================================
+    const matchmakerTemplates = [
+      {
+        id: 1,
+        title: "Daily Study Hours for Freshmen (Hours)",
+        context: "Survey of 30 Students",
+        shapeType: "skewed",
+        correctCenter: "median",
+        correctSpread: "iqr",
+        units: "hours",
+        hasOutlier: true,
+        plotType: "dotplot",
+        xMin: 0,
+        xMax: 9,
+        step: 1,
+        generate: () => {
+          const outlierA = 7.5 + (Math.random() > 0.5 ? 0.5 : 0);
+          const outlierB = 8.5 + (Math.random() > 0.5 ? 0.5 : 0);
+          const base = [0.5, 1, 1, 1.5, 1.5, 1.5, 2, 2, 2, 2.5, 2.5, 3];
+          return {
+            points: [...base, outlierA, outlierB],
+            outlierDesc: `Two high outliers at ${outlierA} and ${outlierB} hours pull the tail to the right.`
+          };
+        }
+      },
+      {
+        id: 2,
+        title: "Heights of Varsity Basketball Team (Inches)",
+        context: "Varsity Roster Heights",
+        shapeType: "symmetric",
+        correctCenter: "mean",
+        correctSpread: "sd",
+        units: "inches",
+        hasOutlier: false,
+        plotType: "dotplot",
+        xMin: 66,
+        xMax: 78,
+        step: 2,
+        generate: () => {
+          const shift = Math.random() > 0.5 ? 1 : 0;
+          return {
+            points: [68+shift, 69+shift, 70+shift, 70+shift, 71+shift, 71+shift, 71+shift, 72+shift, 72+shift, 72+shift, 72+shift, 73+shift, 73+shift, 74+shift, 74+shift, 75+shift],
+            outlierDesc: `Evenly balanced bell distribution around ${72+shift} inches with no outliers.`
+          };
+        }
+      },
+      {
+        id: 3,
+        title: "Miles Driven on Highway Sedan Commuter Fleet (Miles)",
+        context: "Fleet Highway Mileage",
+        shapeType: "skewed",
+        correctCenter: "median",
+        correctSpread: "iqr",
+        units: "miles",
+        hasOutlier: true,
+        plotType: "histogram",
+        xMin: 100,
+        xMax: 450,
+        step: 50,
+        generate: () => {
+          const leakPunct = Math.floor(Math.random() * 2) === 0 ? 1 : 2;
+          return {
+            bins: [
+              { from: 100, to: 150, count: leakPunct },
+              { from: 150, to: 200, count: 0 },
+              { from: 200, to: 250, count: 0 },
+              { from: 250, to: 300, count: 0 },
+              { from: 300, to: 350, count: 1 },
+              { from: 350, to: 400, count: 6 + Math.floor(Math.random()*3) },
+              { from: 400, to: 450, count: 3 + Math.floor(Math.random()*2) }
+            ],
+            outlierDesc: `Isolated fuel leak outlier in the 100-150 mile bin skews the data left.`
+          };
+        }
+      },
+      {
+        id: 4,
+        title: "Mass of Standard Factory Precision Bolts (Grams)",
+        context: "Quality Control Lab",
+        shapeType: "symmetric",
+        correctCenter: "mean",
+        correctSpread: "sd",
+        units: "grams",
+        hasOutlier: false,
+        plotType: "dotplot",
+        xMin: 24.5,
+        xMax: 25.5,
+        step: 0.2,
+        generate: () => ({
+          points: [24.8, 24.9, 24.9, 25.0, 25.0, 25.0, 25.0, 25.1, 25.1, 25.2],
+          outlierDesc: "Normal mound centered cleanly at 25.0 grams."
+        })
+      },
+      {
+        id: 5,
+        title: "Home Sale Prices in Suburban Neighborhood ($ Thousands)",
+        context: "County Real Estate Records",
+        shapeType: "skewed",
+        correctCenter: "median",
+        correctSpread: "iqr",
+        units: "$ thousands",
+        hasOutlier: true,
+        plotType: "dotplot",
+        xMin: 200,
+        xMax: 1000,
+        step: 100,
+        generate: () => {
+          const m1 = 850 + Math.floor(Math.random() * 50);
+          const m2 = 920 + Math.floor(Math.random() * 60);
+          return {
+            points: [280, 290, 310, 315, 320, 325, 330, 340, 350, m1, m2],
+            outlierDesc: `Two luxury estates at $${m1}k and $${m2}k pull the tail heavily to the right.`
+          };
+        }
+      },
+      {
+        id: 6,
+        title: "Diameter of Tournament Tennis Balls (Centimeters)",
+        context: "Tournament Quality Assurance",
+        shapeType: "symmetric",
+        correctCenter: "mean",
+        correctSpread: "sd",
+        units: "cm",
+        hasOutlier: false,
+        plotType: "dotplot",
+        xMin: 6.55,
+        xMax: 6.75,
+        step: 0.05,
+        generate: () => ({
+          points: [6.60, 6.62, 6.64, 6.65, 6.66, 6.67, 6.68, 6.68, 6.70, 6.72],
+          outlierDesc: "Uniform bell distribution tightly grouped around 6.66 cm with no outliers."
+        })
+      },
+      {
+        id: 7,
+        title: "Math 1 Chapter Exam Scores (Points)",
+        context: "Period 3 Math Class",
+        shapeType: "skewed",
+        correctCenter: "median",
+        correctSpread: "iqr",
+        units: "points",
+        hasOutlier: true,
+        plotType: "dotplot",
+        xMin: 0,
+        xMax: 100,
+        step: 10,
+        generate: () => ({
+          points: [0, 0, 75, 78, 82, 85, 85, 88, 90, 92, 95],
+          outlierDesc: "Two absent students receiving 0 create severe low outliers skewing the data left."
+        })
+      },
+      {
+        id: 8,
+        title: "Daily Smartphone Screen Time for Teenagers (Hours)",
+        context: "High School Media Survey",
+        shapeType: "skewed",
+        correctCenter: "median",
+        correctSpread: "iqr",
+        units: "hours",
+        hasOutlier: true,
+        plotType: "dotplot",
+        xMin: 0,
+        xMax: 12,
+        step: 1,
+        generate: () => {
+          const outlier = 11 + (Math.random() > 0.5 ? 0.5 : 0);
+          return {
+            points: [2, 2.5, 3, 3, 3.5, 4, 4, 4.5, 5, 5.5, outlier],
+            outlierDesc: `A marathon social media user at ${outlier} hours forms a distinct high outlier.`
+          };
+        }
+      },
+      {
+        id: 9,
+        title: "Distilled Water Boiling Point Laboratory Trials (°C)",
+        context: "AP Chemistry Lab",
+        shapeType: "symmetric",
+        correctCenter: "mean",
+        correctSpread: "sd",
+        units: "°C",
+        hasOutlier: false,
+        plotType: "dotplot",
+        xMin: 99.4,
+        xMax: 100.6,
+        step: 0.2,
+        generate: () => ({
+          points: [99.7, 99.8, 99.9, 100.0, 100.0, 100.0, 100.1, 100.1, 100.2, 100.3],
+          outlierDesc: "Tightly grouped symmetric bell centered exactly at 100.0°C."
+        })
+      },
+      {
+        id: 10,
+        title: "Morning Traffic Commute Delay Times (Minutes)",
+        context: "Suburban Transit Audit",
+        shapeType: "skewed",
+        correctCenter: "median",
+        correctSpread: "iqr",
+        units: "minutes",
+        hasOutlier: true,
+        plotType: "histogram",
+        xMin: 0,
+        xMax: 70,
+        step: 10,
+        generate: () => ({
+          bins: [
+            { from: 0, to: 10, count: 8 },
+            { from: 10, to: 20, count: 6 },
+            { from: 20, to: 30, count: 3 },
+            { from: 30, to: 40, count: 1 },
+            { from: 40, to: 50, count: 0 },
+            { from: 50, to: 60, count: 0 },
+            { from: 60, to: 70, count: 2 }
+          ],
+          outlierDesc: "A major highway accident causes high delay outliers in the 60-70 minute bin."
+        })
+      },
+      {
+        id: 11,
+        title: "Varsity 100m Dash Sprint Times (Seconds)",
+        context: "Track & Field Season Opener",
+        shapeType: "symmetric",
+        correctCenter: "mean",
+        correctSpread: "sd",
+        units: "seconds",
+        hasOutlier: false,
+        plotType: "dotplot",
+        xMin: 12.0,
+        xMax: 13.6,
+        step: 0.2,
+        generate: () => ({
+          points: [12.4, 12.5, 12.6, 12.7, 12.8, 12.8, 12.8, 12.9, 13.0, 13.1, 13.2],
+          outlierDesc: "Bell-shaped mound symmetrically clustered around 12.8 seconds."
+        })
+      },
+      {
+        id: 12,
+        title: "Weights of Crisp Honeycrisp Apples (Grams)",
+        context: "Commercial Orchard Inspection",
+        shapeType: "symmetric",
+        correctCenter: "mean",
+        correctSpread: "sd",
+        units: "grams",
+        hasOutlier: false,
+        plotType: "dotplot",
+        xMin: 160,
+        xMax: 200,
+        step: 5,
+        generate: () => ({
+          points: [170, 172, 175, 178, 180, 180, 180, 182, 185, 188, 190],
+          outlierDesc: "Mound-shaped distribution centered around 180 grams with no outliers."
+        })
+      }
+    ];
+
     let currentMatchIndex = 0;
+    let currentMatchActiveData = null;
     let selectedShapeChoice = null;
     let selectedCenterChoice = null;
     let selectedSpreadChoice = null;
 
     function renderMatchmakerProblem() {
-      const scenario = matchmakerScenarios[currentMatchIndex];
-      document.getElementById('match-index').textContent = `${currentMatchIndex + 1} of ${matchmakerScenarios.length}`;
-      document.getElementById('match-plot-title').textContent = scenario.title;
-      document.getElementById('match-context-tag').textContent = scenario.context;
+      const template = matchmakerTemplates[currentMatchIndex];
+      const generated = template.generate();
+      currentMatchActiveData = { ...template, ...generated };
+
+      document.getElementById('match-index').textContent = `${currentMatchIndex + 1} of ${matchmakerTemplates.length}`;
+      document.getElementById('match-plot-title').textContent = currentMatchActiveData.title;
+      document.getElementById('match-context-tag').textContent = currentMatchActiveData.context;
       
-      // Reset user selections
       selectedShapeChoice = null;
       selectedCenterChoice = null;
       selectedSpreadChoice = null;
@@ -981,10 +1386,9 @@
       updateSentencePreview();
 
       const feedback = document.getElementById('match-feedback');
-      feedback.className = 'hidden';
+      if (feedback) feedback.className = 'hidden';
 
-      // Draw distribution on canvas
-      drawMatchCanvas(scenario);
+      drawMatchCanvas(currentMatchActiveData);
     }
 
     function drawMatchCanvas(scenario) {
@@ -1031,13 +1435,11 @@
       ctx.fillText(`Scale in ${scenario.units}`, W / 2, H - 6);
 
       if (scenario.plotType === 'dotplot') {
-        // Count frequencies of data points
         const counts = {};
-        scenario.dataPoints.forEach(pt => {
+        scenario.points.forEach(pt => {
           counts[pt] = (counts[pt] || 0) + 1;
         });
 
-        // Plot dots
         const radius = 6;
         Object.keys(counts).forEach(ptStr => {
           const pt = parseFloat(ptStr);
@@ -1048,8 +1450,7 @@
             const yPos = baselineY - 8 - (i * (radius * 2 + 3));
             ctx.beginPath();
             ctx.arc(xPos, yPos, radius, 0, Math.PI * 2);
-            // Highlight outlier if exists
-            if (scenario.hasOutlier && (pt >= scenario.xMax - scenario.step || pt <= scenario.xMin + scenario.step)) {
+            if (scenario.hasOutlier && (pt >= scenario.xMax - scenario.step * 1.5 || pt <= scenario.xMin + scenario.step * 1.5)) {
               ctx.fillStyle = '#ef4444';
             } else {
               ctx.fillStyle = '#4f46e5';
@@ -1061,24 +1462,22 @@
           }
         });
       } else if (scenario.plotType === 'histogram') {
-        // Draw bars for bins
         const maxCount = Math.max(...scenario.bins.map(b => b.count));
         const maxBarH = baselineY - padTop - 15;
 
         scenario.bins.forEach(bin => {
           const xStart = padLeft + ((bin.from - scenario.xMin) / range) * plotWidth;
           const barW = ((bin.to - bin.from) / range) * plotWidth;
-          const barH = (bin.count / maxCount) * maxBarH;
+          const barH = maxCount > 0 ? (bin.count / maxCount) * maxBarH : 0;
           const yStart = baselineY - barH;
 
           if (bin.count > 0) {
-            ctx.fillStyle = (bin.from < 200) ? '#f87171' : '#6366f1';
+            ctx.fillStyle = (bin.from < (scenario.xMin + range * 0.3) && scenario.hasOutlier) ? '#f87171' : '#6366f1';
             ctx.fillRect(xStart, yStart, barW, barH);
             ctx.strokeStyle = '#1e1b4b';
             ctx.lineWidth = 1.5;
             ctx.strokeRect(xStart, yStart, barW, barH);
 
-            // Count label on top of bar
             ctx.fillStyle = '#1e293b';
             ctx.font = 'bold 11px Plus Jakarta Sans, sans-serif';
             ctx.fillText(bin.count, xStart + barW / 2, yStart - 5);
@@ -1118,17 +1517,20 @@
       if (cat === 'center') {
         selectedCenterChoice = statName;
         document.querySelectorAll('.stat-center-btn').forEach(b => b.classList.remove('bg-indigo-100', 'border-indigo-600', 'text-indigo-950'));
-        document.getElementById(`btn-center-${statName}`).classList.add('bg-indigo-100', 'border-indigo-600', 'text-indigo-950');
+        const el = document.getElementById(`btn-center-${statName}`);
+        if (el) el.classList.add('bg-indigo-100', 'border-indigo-600', 'text-indigo-950');
       } else {
         selectedSpreadChoice = statName;
         document.querySelectorAll('.stat-spread-btn').forEach(b => b.classList.remove('bg-indigo-100', 'border-indigo-600', 'text-indigo-950'));
-        document.getElementById(`btn-spread-${statName}`).classList.add('bg-indigo-100', 'border-indigo-600', 'text-indigo-950');
+        const el = document.getElementById(`btn-spread-${statName}`);
+        if (el) el.classList.add('bg-indigo-100', 'border-indigo-600', 'text-indigo-950');
       }
       updateSentencePreview();
     }
 
     function updateSentencePreview() {
       const preview = document.getElementById('sentence-preview');
+      if (!preview) return;
       const shapeWord = selectedShapeChoice ? `<span class="highlight-mark">${selectedShapeChoice.toUpperCase()}</span>` : `[SHAPE]`;
       const centerWord = selectedCenterChoice ? `<span class="highlight-mark">${selectedCenterChoice.toUpperCase()}</span>` : `[CENTER METRIC]`;
       const spreadWord = selectedSpreadChoice ? `<span class="highlight-mark">${selectedSpreadChoice.toUpperCase()}</span>` : `[VARIABILITY METRIC]`;
@@ -1139,8 +1541,9 @@
     }
 
     function checkMatchmakerAnswer() {
-      const scenario = matchmakerScenarios[currentMatchIndex];
+      const scenario = currentMatchActiveData;
       const feedback = document.getElementById('match-feedback');
+      if (!scenario || !feedback) return;
 
       if (!selectedShapeChoice || !selectedCenterChoice || !selectedSpreadChoice) {
         feedback.className = 'p-3 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-xs font-semibold';
@@ -1153,7 +1556,7 @@
       const isSpreadCorrect = selectedSpreadChoice === scenario.correctSpread;
 
       if (isShapeCorrect && isCenterCorrect && isSpreadCorrect) {
-        playTone(587); // D5 success
+        playTone(587);
         confetti({ particleCount: 35, spread: 60, origin: { y: 0.7 } });
         feedback.className = 'p-4 rounded-xl bg-emerald-50 text-emerald-950 border border-emerald-300 space-y-2';
         feedback.innerHTML = `
@@ -1184,12 +1587,17 @@
     }
 
     function nextMatchmakerProblem() {
-      currentMatchIndex = (currentMatchIndex + 1) % matchmakerScenarios.length;
+      // Pick a random scenario different from the current one to ensure variation on every click
+      let nextIdx;
+      do {
+        nextIdx = Math.floor(Math.random() * matchmakerTemplates.length);
+      } while (nextIdx === currentMatchIndex && matchmakerTemplates.length > 1);
+      currentMatchIndex = nextIdx;
       renderMatchmakerProblem();
     }
 
     // ==========================================================
-    // MODULE 2: GRAPHING EXECUTION AUDITOR ("SPOT THE FLAW")
+    // MODULE 2: GRAPHING EXECUTION AUDITOR (8 Varied Scenarios)
     // ==========================================================
     const auditScenarios = [
       {
@@ -1198,10 +1606,9 @@
         title: "Backpack Weights of 15 Freshmen",
         prompt: "Construct a box plot for backpack weights in pounds. Minimum = 6, Q1 = 12, Median = 18, Q3 = 24, Maximum = 38.",
         errorsPresent: ["uneven_scale", "missing_units"],
-        scaleIntervals: [0, 6, 12, 18, 24, 38], // Non-uniform interval! Skipping numbers directly to data points
-        axisLabel: "Backpack Weights", // missing "(pounds)"
+        scaleIntervals: [0, 6, 12, 18, 24, 38],
+        axisLabel: "Backpack Weights",
         hasTitle: true,
-        summaryPoints: [6, 12, 18, 24, 38],
         options: [
           { key: "uneven_scale", label: "Uneven Scale Intervals (ticks jump directly to data points instead of equal intervals like 0, 5, 10...)" },
           { key: "missing_units", label: "Missing Units on Axis Label (says 'Backpack Weights' instead of 'Backpack Weights (pounds)')" },
@@ -1217,9 +1624,9 @@
         prompt: "Draw a histogram showing weekly screen time in hours with bin widths of 5 hours.",
         errorsPresent: ["missing_axis_label", "bar_gaps"],
         scaleIntervals: [0, 5, 10, 15, 20, 25, 30],
-        axisLabel: "", // Missing axis title completely!
+        axisLabel: "",
         hasTitle: true,
-        barGaps: true, // Left gaps like a bar chart instead of continuous histogram bars
+        barGaps: true,
         options: [
           { key: "missing_axis_label", label: "Missing X-Axis Label completely (no mention of 'Screen Time (hours)')" },
           { key: "bar_gaps", label: "Gaps between histogram bars (histograms for continuous data must have touching bars)" },
@@ -1244,6 +1651,94 @@
           { key: "wrong_type", label: "Drew a histogram instead of a dot plot" }
         ],
         explanation: "Dot plots convey quantity visually through height. If dots are drawn with different sizes or irregular spacing, columns look taller or shorter than they actually are! In addition, always specify full axis context (e.g., 'Number of Siblings')."
+      },
+      {
+        id: 4,
+        type: "Box Plot",
+        title: "Track 100-Meter Dash Sprint Times",
+        prompt: "Construct a box plot for 100m sprint times in seconds. Minimum = 11.8, Q1 = 12.2, Median = 12.6, Q3 = 13.0, Maximum = 14.0.",
+        errorsPresent: ["wrong_median", "missing_units"],
+        scaleIntervals: [11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0],
+        axisLabel: "Sprint Times",
+        hasTitle: true,
+        isWrongMedian: true,
+        options: [
+          { key: "wrong_median", label: "Median bar is incorrectly plotted at 13.1 instead of 12.6" },
+          { key: "missing_units", label: "Missing units on axis ('Sprint Times' instead of 'Sprint Times (seconds)')" },
+          { key: "uneven_scale", label: "Uneven scale ticks along the number line" },
+          { key: "missing_title", label: "Missing graph title" }
+        ],
+        explanation: "The student accurately spaced their axis, but made two careless mistakes: placing the median divider line at the wrong number (13.1 instead of 12.6) and omitting '(seconds)' from the axis label!"
+      },
+      {
+        id: 5,
+        type: "Histogram",
+        title: "Daily Commute Distances of Teachers",
+        prompt: "Construct a histogram for commute distances with uniform 5-mile bin intervals: 0-5, 5-10, 10-15, 15-20, 20-25.",
+        errorsPresent: ["uneven_scale", "missing_axis_label"],
+        scaleIntervals: [0, 5, 15, 20, 30],
+        axisLabel: "",
+        hasTitle: true,
+        barGaps: false,
+        options: [
+          { key: "uneven_scale", label: "Unequal bin widths on the X-axis (jumping 5, then 10, then 5)" },
+          { key: "missing_axis_label", label: "Missing X-axis label completely ('Distance (miles)')" },
+          { key: "bar_gaps", label: "Gaps between histogram bars" },
+          { key: "wrong_title", label: "Title specifies the wrong units" }
+        ],
+        explanation: "Histogram bins MUST have identical widths throughout the entire graph! Shifting from a 5-unit bin to a 10-unit bin distorts the area of the bars. And axis labels cannot be omitted."
+      },
+      {
+        id: 6,
+        type: "Dot Plot",
+        title: "Number of Pets in Household",
+        prompt: "Construct a dot plot representing pet counts: 0, 1, 1, 2, 2, 2, 4, 5. Ensure number line is continuous.",
+        errorsPresent: ["skipped_zero", "missing_units"],
+        scaleIntervals: [0, 1, 2, 4, 5],
+        axisLabel: "Pets",
+        hasTitle: true,
+        options: [
+          { key: "skipped_zero", label: "Skipped number 3 on the number line because frequency was zero" },
+          { key: "missing_units", label: "Missing descriptive units on axis ('Number of Pets')" },
+          { key: "uneven_dots", label: "Dots are drawn with different shapes" },
+          { key: "missing_title", label: "Title is missing" }
+        ],
+        explanation: "Never skip numbers on a number line just because there are zero data points! The space for 3 pets must remain on the axis to accurately show the visual gap in data."
+      },
+      {
+        id: 7,
+        type: "Box Plot",
+        title: "Freshman Bowling Scores",
+        prompt: "Construct a box plot for bowling scores: Min = 80, Q1 = 95, Median = 110, Q3 = 125, Max = 150.",
+        errorsPresent: ["missing_title", "missing_units"],
+        scaleIntervals: [70, 80, 90, 100, 110, 120, 130, 140, 150, 160],
+        axisLabel: "Bowling Scores",
+        hasTitle: false,
+        options: [
+          { key: "missing_title", label: "Missing graph title completely (no context provided)" },
+          { key: "missing_units", label: "Missing units on axis label ('Bowling Scores (points)')" },
+          { key: "uneven_scale", label: "Uneven scale tick spacing" },
+          { key: "wrong_median", label: "Median bar is omitted" }
+        ],
+        explanation: "Even if your 5-number summary is plotted flawlessly, missing both the graph title and the axis units forfeits 20-30% of credit on standard IM1 scoring rubrics!"
+      },
+      {
+        id: 8,
+        type: "Histogram",
+        title: "Smartphone Battery Life (Hours)",
+        prompt: "Draw a continuous histogram showing smartphone battery durations in hours.",
+        errorsPresent: ["bar_gaps", "missing_units"],
+        scaleIntervals: [10, 15, 20, 25, 30, 35],
+        axisLabel: "Battery Life",
+        hasTitle: true,
+        barGaps: true,
+        options: [
+          { key: "bar_gaps", label: "Gaps between histogram bars for continuous numerical data" },
+          { key: "missing_units", label: "Missing units on axis label ('Battery Life (hours)')" },
+          { key: "uneven_scale", label: "Interval sizes vary" },
+          { key: "missing_title", label: "Missing graph title" }
+        ],
+        explanation: "Battery life is continuous data. Drawing separated bars treats it like a discrete categorical bar graph! The bars must touch, and units '(hours)' must be explicitly written."
       }
     ];
 
@@ -1252,14 +1747,16 @@
     function renderGraphAuditScenario() {
       const scenario = auditScenarios[currentAuditIndex];
       document.getElementById('audit-graph-type').textContent = `Plot Type: ${scenario.type}`;
-      document.getElementById('audit-title-display').textContent = scenario.title;
+      document.getElementById('audit-title-display').textContent = scenario.hasTitle ? scenario.title : '(No Title Provided)';
       document.getElementById('audit-prompt-text').textContent = `"${scenario.prompt}"`;
       document.getElementById('audit-feedback-result').className = 'hidden';
 
-      // Render Checkboxes
+      // Shuffle options so user actively reads every time
+      const shuffledOptions = [...scenario.options].sort(() => Math.random() - 0.5);
+
       const group = document.getElementById('audit-checkbox-group');
       group.innerHTML = '';
-      scenario.options.forEach(opt => {
+      shuffledOptions.forEach(opt => {
         const item = document.createElement('label');
         item.className = "flex items-start gap-3 p-3 bg-white rounded-xl border border-slate-200 hover:border-indigo-300 cursor-pointer transition-all";
         item.innerHTML = `
@@ -1285,7 +1782,6 @@
       const padRight = 35;
 
       if (scenario.type === "Box Plot") {
-        // Draw axis with deliberate uneven spacing
         ctx.strokeStyle = '#475569';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -1308,17 +1804,17 @@
           ctx.fillText(num, x, baselineY + 18);
         });
 
-        // Axis label without units
+        // Axis label
         ctx.font = 'bold 11px Plus Jakarta Sans';
         ctx.fillStyle = '#475569';
         ctx.fillText(scenario.axisLabel, W / 2, H - 12);
 
         // Draw Box Plot
-        const minX = padLeft + 1 * tickStep; // at 6
-        const q1X = padLeft + 2 * tickStep;  // at 12
-        const medX = padLeft + 3 * tickStep; // at 18
-        const q3X = padLeft + 4 * tickStep;  // at 24
-        const maxX = padLeft + 5 * tickStep; // at 38
+        const minX = padLeft + 1 * tickStep;
+        const q1X = padLeft + 2 * tickStep;
+        const medX = scenario.isWrongMedian ? (padLeft + 4.2 * tickStep) : (padLeft + 3 * tickStep);
+        const q3X = padLeft + 4 * tickStep;
+        const maxX = padLeft + 5 * tickStep;
         const boxY = 70;
         const boxH = 50;
 
@@ -1375,20 +1871,18 @@
           ctx.fillText(num, x, baselineY + 18);
         });
 
-        // Axis label
         ctx.font = 'bold 11px Plus Jakarta Sans';
         ctx.fillStyle = '#475569';
         ctx.fillText(scenario.axisLabel, W / 2, H - 12);
 
-        // Draw dots with deliberate flaws (uneven sizes and vertical spacing)
-        const stacks = { 0: 2, 1: 3, 2: 2, 3: 1, 5: 1 };
+        const stacks = { 0: 2, 1: 3, 2: 2, 3: 1, 4: 1 };
         Object.keys(stacks).forEach(k => {
           const val = parseInt(k, 10);
           const x = padLeft + val * tickStep;
           const count = stacks[k];
           for (let i = 0; i < count; i++) {
-            const radius = (val === 1 && i === 1) ? 9 : (val === 0 ? 4 : 6);
-            const yStep = (val === 1) ? 13 : 18;
+            const radius = (scenario.errorsPresent.includes('uneven_dots') && val === 1 && i === 1) ? 10 : 6;
+            const yStep = (scenario.errorsPresent.includes('uneven_dots') && val === 1) ? 13 : 18;
             const y = baselineY - 10 - (i * yStep);
             ctx.beginPath();
             ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -1400,7 +1894,7 @@
           }
         });
       } else {
-        // Histogram with deliberate gaps
+        // Histogram
         ctx.strokeStyle = '#475569';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -1408,8 +1902,7 @@
         ctx.lineTo(W - padRight, baselineY);
         ctx.stroke();
 
-        // Bars
-        const heights = [30, 70, 110, 85, 40, 15];
+        const heights = [35, 75, 110, 80, 45, 15];
         const barSlotW = (W - padLeft - padRight) / heights.length;
 
         heights.forEach((h, idx) => {
@@ -1423,16 +1916,14 @@
           ctx.lineWidth = 1.5;
           ctx.strokeRect(x, y, w, h);
 
-          // Ticks
           ctx.fillStyle = '#334155';
           ctx.font = '10px JetBrains Mono';
-          ctx.fillText(idx * 5, padLeft + idx * barSlotW, baselineY + 15);
+          ctx.fillText(scenario.scaleIntervals[idx] !== undefined ? scenario.scaleIntervals[idx] : idx * 5, padLeft + idx * barSlotW, baselineY + 15);
         });
 
-        // Missing axis title
-        ctx.font = 'italic 11px Plus Jakarta Sans';
-        ctx.fillStyle = '#ef4444';
-        ctx.fillText("(Missing Axis Label & Units Here!)", W / 2, H - 10);
+        ctx.font = 'bold 11px Plus Jakarta Sans';
+        ctx.fillStyle = scenario.axisLabel ? '#475569' : '#ef4444';
+        ctx.fillText(scenario.axisLabel || "(Missing Axis Label & Units Here!)", W / 2, H - 10);
       }
     }
 
@@ -1459,7 +1950,7 @@
         res.className = "p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 block space-y-1.5";
         res.innerHTML = `
           <div class="font-bold flex items-center gap-1.5 text-amber-800 text-sm">
-            <i class="fa-solid fa-circle-exclamation"></i> Not quite right! Look closer at the details.
+            <i class="fa-solid fa-circle-exclamation"></i> Look closer at the labels, scales, and intervals!
           </div>
           <p class="leading-relaxed">${scenario.explanation}</p>
         `;
@@ -1467,119 +1958,171 @@
     }
 
     function loadGraphAuditScenario() {
-      currentAuditIndex = (currentAuditIndex + 1) % auditScenarios.length;
+      let nextIdx;
+      do {
+        nextIdx = Math.floor(Math.random() * auditScenarios.length);
+      } while (nextIdx === currentAuditIndex && auditScenarios.length > 1);
+      currentAuditIndex = nextIdx;
       renderGraphAuditScenario();
     }
 
     // ==========================================================
-    // MODULE 3: PACED MINI-QUIZ WITH "COVER-UP & HIGHLIGHT" HABITS
+    // MODULE 3: PACED MINI-QUIZ (Procedural Question Bank & Timer)
     // ==========================================================
-    const quizQuestions = [
-      {
-        id: 1,
-        title: "Test Problem 1: Choosing Statistics for Skewed Test Scores",
-        promptText: "A math class took an exam. Most students scored between 75 and 90, but three students who were absent scored 0. State the distribution shape. Next, explicitly name which measure of center and which measure of variability should be used to describe this class, and explain why with respect to resistance.",
-        actionTokens: ["State the distribution shape", "explicitly name", "measure of center", "measure of variability", "explain why with respect to resistance"],
-        hasGraphic: false,
-        fields: [
-          {
-            id: "q1_shape",
-            label: "Part A: What is the shape of this distribution?",
-            type: "select",
-            options: ["Select...", "Symmetric / Bell-Shaped", "Skewed Left (low outliers pull the tail left)", "Uniform"],
-            correct: "Skewed Left (low outliers pull the tail left)"
-          },
-          {
-            id: "q1_center",
-            label: "Part B: Explicitly name the best Measure of Center (with category name):",
-            type: "select",
-            options: ["Select...", "Mean is the measure of center", "Median is the measure of center", "Standard Deviation is the measure of center"],
-            correct: "Median is the measure of center"
-          },
-          {
-            id: "q1_spread",
-            label: "Part C: Explicitly name the best Measure of Variability (Spread):",
-            type: "select",
-            options: ["Select...", "IQR (Interquartile Range) is the measure of variability", "Standard Deviation is the measure of variability", "Mean is the measure of variability"],
-            correct: "IQR (Interquartile Range) is the measure of variability"
-          },
-          {
-            id: "q1_why",
-            label: "Part D: Explain WHY (mentioning resistance to extreme values):",
-            type: "select",
-            options: [
-              "Select...",
-              "Because median and IQR are resistant to outliers, whereas mean and standard deviation would be falsely dragged down by the 0s.",
-              "Because mean is always more accurate no matter what.",
-              "Because IQR uses all numbers equally."
-            ],
-            correct: "Because median and IQR are resistant to outliers, whereas mean and standard deviation would be falsely dragged down by the 0s."
-          }
-        ]
+    const questionBank = [
+      // Type 1: Skewed scores with absent zeroes (Resistance)
+      () => {
+        const absentCount = 2 + Math.floor(Math.random() * 2);
+        return {
+          title: "Choosing Statistics for Skewed Test Scores",
+          promptText: `A math class took an exam. Most students scored between 75 and 92, but ${absentCount} students who were absent received 0. State the distribution shape. Next, explicitly name which measure of center and which measure of variability should be used to describe this class, and explain why with respect to resistance.`,
+          actionTokens: ["State the distribution shape", "explicitly name", "measure of center", "measure of variability", "explain why with respect to resistance"],
+          hasGraphic: false,
+          fields: [
+            {
+              id: "q_shape",
+              label: "Part A: What is the shape of this distribution?",
+              type: "select",
+              options: ["Select...", "Skewed Left (low 0s pull the tail to the left)", "Symmetric / Bell-Shaped", "Uniform"],
+              correct: "Skewed Left (low 0s pull the tail to the left)"
+            },
+            {
+              id: "q_center",
+              label: "Part B: Explicitly name the best Measure of Center (with category name):",
+              type: "select",
+              options: ["Select...", "Median is the measure of center", "Mean is the measure of center", "Standard Deviation is the measure of center"],
+              correct: "Median is the measure of center"
+            },
+            {
+              id: "q_spread",
+              label: "Part C: Explicitly name the best Measure of Variability (Spread):",
+              type: "select",
+              options: ["Select...", "IQR (Interquartile Range) is the measure of variability", "Standard Deviation is the measure of variability", "Mean is the measure of variability"],
+              correct: "IQR (Interquartile Range) is the measure of variability"
+            },
+            {
+              id: "q_why",
+              label: "Part D: Explain WHY (mentioning resistance to extreme values):",
+              type: "select",
+              options: [
+                "Select...",
+                "Because median and IQR are resistant to outliers, whereas mean and standard deviation would be falsely dragged down by the 0s.",
+                "Because mean is always more accurate no matter what.",
+                "Because IQR uses all numbers equally."
+              ],
+              correct: "Because median and IQR are resistant to outliers, whereas mean and standard deviation would be falsely dragged down by the 0s."
+            }
+          ]
+        };
       },
-      {
-        id: 2,
-        title: "Test Problem 2: Five-Number Summary & Unit Precision",
-        promptText: "Here are the commute times (in minutes) for 9 teachers: 10, 12, 15, 18, 20, 22, 25, 28, 45. Calculate the median and IQR. Make sure to attach units to your answer and categorize whether IQR measures center or variability.",
-        actionTokens: ["Calculate the median", "and IQR", "attach units", "categorize whether IQR measures center or variability"],
-        hasGraphic: false,
-        fields: [
-          {
-            id: "q2_med",
-            label: "Part A: Median commute time (including units):",
-            type: "select",
-            options: ["Select...", "20 minutes", "20", "22.5 minutes", "18 minutes"],
-            correct: "20 minutes"
-          },
-          {
-            id: "q2_iqr",
-            label: "Part B: IQR commute time (Q3 - Q1, including units):",
-            type: "select",
-            options: ["Select...", "13 minutes (26.5 - 13.5)", "13", "15 minutes", "35 minutes"],
-            correct: "13 minutes (26.5 - 13.5)"
-          },
-          {
-            id: "q2_role",
-            label: "Part C: What category of statistic is IQR?",
-            type: "select",
-            options: ["Select...", "A measure of variability (spread)", "A measure of center", "A measure of shape"],
-            correct: "A measure of variability (spread)"
-          }
-        ]
+
+      // Type 2: 5-number summary calculation & units
+      () => {
+        const offset = Math.floor(Math.random() * 5);
+        const data = [10 + offset, 12 + offset, 15 + offset, 18 + offset, 20 + offset, 22 + offset, 25 + offset, 28 + offset, 45 + offset];
+        const med = 20 + offset;
+        const iqr = 13;
+        return {
+          title: "Five-Number Summary & Unit Precision",
+          promptText: `Here are the commute times (in minutes) for 9 teachers: ${data.join(', ')}. Calculate the median and IQR. Make sure to attach units to your answer and categorize whether IQR measures center or variability.`,
+          actionTokens: ["Calculate the median", "and IQR", "attach units", "categorize whether IQR measures center or variability"],
+          hasGraphic: false,
+          fields: [
+            {
+              id: "q_med",
+              label: "Part A: Median commute time (including units):",
+              type: "select",
+              options: ["Select...", `${med} minutes`, `${med}`, `${med + 2} minutes`, `${med - 2} minutes`],
+              correct: `${med} minutes`
+            },
+            {
+              id: "q_iqr",
+              label: "Part B: IQR commute time (Q3 - Q1, including units):",
+              type: "select",
+              options: ["Select...", `${iqr} minutes (26.5 - 13.5)`, `${iqr}`, `${iqr + 3} minutes`, `35 minutes`],
+              correct: `${iqr} minutes (26.5 - 13.5)`
+            },
+            {
+              id: "q_role",
+              label: "Part C: What category of statistic is IQR?",
+              type: "select",
+              options: ["Select...", "A measure of variability (spread)", "A measure of center", "A measure of outlier presence"],
+              correct: "A measure of variability (spread)"
+            }
+          ]
+        };
       },
-      {
-        id: 3,
-        title: "Test Problem 3: Symmetric Distribution Matching",
+
+      // Type 3: Symmetric distribution matching & SD
+      () => ({
+        title: "Symmetric Distribution Matching & SD Role",
         promptText: "A chemist measures the boiling temperature of pure distilled water across 50 trials. The results form a symmetric bell-shaped histogram with no outliers. Identify the proper summary statistics pair and specify the role of Standard Deviation.",
         actionTokens: ["Identify the proper summary statistics pair", "specify the role of Standard Deviation"],
         hasGraphic: true,
         graphicType: "bell",
         fields: [
           {
-            id: "q3_pair",
+            id: "q_pair",
             label: "Part A: Which statistic pair should be reported?",
             type: "select",
             options: ["Select...", "Mean and Standard Deviation", "Median and IQR", "Mean and IQR", "Median and Standard Deviation"],
             correct: "Mean and Standard Deviation"
           },
           {
-            id: "q3_sd_role",
+            id: "q_sd_role",
             label: "Part B: In this symmetric context, Standard Deviation serves as the:",
             type: "select",
             options: ["Select...", "Measure of variability, quantifying typical distance from the mean", "Measure of center", "Measure of outlier count"],
             correct: "Measure of variability, quantifying typical distance from the mean"
           }
         ]
+      }),
+
+      // Type 4: 1.5 x IQR Outlier Rule Test
+      () => {
+        const q1 = 12 + Math.floor(Math.random() * 4);
+        const q3 = 24 + Math.floor(Math.random() * 4);
+        const iqr = q3 - q1;
+        const upperFence = q3 + (1.5 * iqr);
+        const testValue = Math.round(upperFence + 6);
+        return {
+          title: "1.5 × IQR Outlier Boundary Verification",
+          promptText: `A dataset of student backpack weights has Q1 = ${q1} pounds and Q3 = ${q3} pounds. Calculate the Upper Outlier Fence using the 1.5 × IQR rule, and determine whether a student carrying ${testValue} pounds is an official outlier.`,
+          actionTokens: ["Calculate the Upper Outlier Fence", "using the 1.5 × IQR rule", "determine whether", "is an official outlier"],
+          hasGraphic: false,
+          fields: [
+            {
+              id: "q_fence",
+              label: "Part A: What is the Upper Outlier Fence? (Q3 + 1.5 × IQR)",
+              type: "select",
+              options: ["Select...", `${upperFence} pounds`, `${q3 + iqr} pounds`, `${upperFence + 5} pounds`, `${q1 + 1.5 * iqr} pounds`],
+              correct: `${upperFence} pounds`
+            },
+            {
+              id: "q_outlier_verdict",
+              label: `Part B: Is the ${testValue}-pound backpack an official outlier?`,
+              type: "select",
+              options: [
+                "Select...",
+                `Yes, because ${testValue} > ${upperFence} pounds (it exceeds the Upper Fence).`,
+                `No, because ${testValue} is within normal student range.`,
+                `Yes, because ${testValue} is an even number.`
+              ],
+              correct: `Yes, because ${testValue} > ${upperFence} pounds (it exceeds the Upper Fence).`
+            }
+          ]
+        };
       },
-      {
-        id: 4,
-        title: "Test Problem 4: Multi-Step Graph Verification",
+
+      // Type 5: Graphing Execution Verification
+      () => ({
+        title: "Multi-Step Graph Verification & Detail Audit",
         promptText: "When asked to draw a histogram representing student reading speeds in words per minute, you must label axes with units, keep uniform bin sizes, and avoid gaps between continuous bins. Which of the following execution plans is 100% compliant?",
         actionTokens: ["label axes with units", "keep uniform bin sizes", "avoid gaps between continuous bins", "100% compliant"],
         hasGraphic: false,
         fields: [
           {
-            id: "q4_plan",
+            id: "q_plan",
             label: "Select the completely correct graphing checklist:",
             type: "select",
             options: [
@@ -1591,23 +2134,107 @@
             correct: "X-axis: 'Reading Speed (words per minute)' with touching bars at intervals 100-150, 150-200; Y-axis: 'Frequency (number of students)' with even tick steps."
           }
         ]
-      }
+      }),
+
+      // Type 6: Box Plot Quartile Percentages
+      () => ({
+        title: "Box Plot Quartile Percentage Interpretation",
+        promptText: "In any properly constructed box plot, each segment represents a quartile of the dataset. Identify what percentage of the data values are contained inside the box (between Q1 and Q3).",
+        actionTokens: ["percentage of the data values", "inside the box", "between Q1 and Q3"],
+        hasGraphic: false,
+        fields: [
+          {
+            id: "q_box_pct",
+            label: "What percentage of data lies between Q1 and Q3 (the IQR)?",
+            type: "select",
+            options: ["Select...", "Exactly 50% (the middle half of the data)", "25%", "75%", "It varies depending on whether there are outliers"],
+            correct: "Exactly 50% (the middle half of the data)"
+          }
+        ]
+      }),
+
+      // Type 7: Real-Estate Median Resistance
+      () => ({
+        title: "Real-World Context: Why Median for Home Prices?",
+        promptText: "A real estate website publishes the typical home price for a suburban town. The community has 95 modest family homes priced at $300,000 and 5 mega-mansions priced at $10,000,000. Which measure of center gives the most accurate representation of a typical resident's home?",
+        actionTokens: ["measure of center", "most accurate representation", "typical resident"],
+        hasGraphic: false,
+        fields: [
+          {
+            id: "q_home_metric",
+            label: "Which measure of center should be reported?",
+            type: "select",
+            options: [
+              "Select...",
+              "Median, because the $10 million mansions are extreme outliers that falsely inflate the mean.",
+              "Mean, because it takes into account every single mansion.",
+              "Standard deviation, because it measures the typical price."
+            ],
+            correct: "Median, because the $10 million mansions are extreme outliers that falsely inflate the mean."
+          }
+        ]
+      }),
+
+      // Type 8: Comparing Distributions
+      () => ({
+        title: "Comparing Two Distributions (Variability and Center)",
+        promptText: "Period 1 Math has a median test score of 82 with an IQR of 6. Period 2 Math has a median test score of 82 with an IQR of 18. Compare the center and variability of the two classes.",
+        actionTokens: ["Compare the center", "and variability", "two classes"],
+        hasGraphic: false,
+        fields: [
+          {
+            id: "q_compare",
+            label: "Which statement is mathematically accurate?",
+            type: "select",
+            options: [
+              "Select...",
+              "Both classes have the same typical center (median 82), but Period 2 has much greater variability in scores (IQR 18 vs 6).",
+              "Period 1 performed better overall because its IQR is smaller.",
+              "Period 2 has a higher center because its spread is wider."
+            ],
+            correct: "Both classes have the same typical center (median 82), but Period 2 has much greater variability in scores (IQR 18 vs 6)."
+          }
+        ]
+      })
     ];
 
     let currentQuizIndex = 0;
+    let quizActiveQuestions = [];
     let quizUserAnswers = {};
-    let quizStartTime = Date.now();
+    let quizStartTime = 0;
     let quizTimerInterval = null;
     let quizHighlightedTokensCount = 0;
+
+    function startQuizSession() {
+      // Transition from Launchpad to Active Quiz
+      document.getElementById('quiz-intro-container').classList.add('hidden');
+      document.getElementById('quiz-active-container').classList.remove('hidden');
+      document.getElementById('quiz-coverup-container').classList.add('hidden');
+      document.getElementById('quiz-results-container').classList.add('hidden');
+
+      // Sample 4 random questions without duplicates
+      const shuffledIndices = [...Array(questionBank.length).keys()].sort(() => Math.random() - 0.5);
+      quizActiveQuestions = shuffledIndices.slice(0, 4).map(idx => questionBank[idx]());
+
+      currentQuizIndex = 0;
+      quizUserAnswers = {};
+      quizHighlightedTokensCount = 0;
+
+      // Start the timer ONLY NOW
+      startQuizTimer();
+      renderQuizQuestion();
+    }
 
     function startQuizTimer() {
       if (quizTimerInterval) clearInterval(quizTimerInterval);
       quizStartTime = Date.now();
+      const timerEl = document.getElementById('quiz-timer');
+      if (timerEl) timerEl.textContent = "00:00";
+
       quizTimerInterval = setInterval(() => {
         const elapsedSec = Math.floor((Date.now() - quizStartTime) / 1000);
         const m = Math.floor(elapsedSec / 60).toString().padStart(2, '0');
         const s = (elapsedSec % 60).toString().padStart(2, '0');
-        const timerEl = document.getElementById('quiz-timer');
         if (timerEl) timerEl.textContent = `${m}:${s}`;
 
         const badge = document.getElementById('pacing-badge');
@@ -1624,21 +2251,19 @@
     }
 
     function renderQuizQuestion() {
-      const q = quizQuestions[currentQuizIndex];
+      if (quizActiveQuestions.length === 0) return;
+      const q = quizActiveQuestions[currentQuizIndex];
       document.getElementById('quiz-q-num').textContent = currentQuizIndex + 1;
       
-      // Interactive highlighter prompt setup
       const promptContainer = document.getElementById('quiz-prompt-interactive');
       let promptHtml = q.promptText;
 
-      // Wrap action tokens so clicking them toggles a highlight
       q.actionTokens.forEach(token => {
         const regex = new RegExp(`(${token})`, 'gi');
         promptHtml = promptHtml.replace(regex, `<span class="cursor-pointer hover:bg-amber-100 transition-colors rounded px-1 border-b-2 border-dashed border-amber-400 font-medium" onclick="toggleTokenHighlight(this)">$1</span>`);
       });
       promptContainer.innerHTML = promptHtml;
 
-      // Graphic if present
       const graphicWrap = document.getElementById('quiz-graphic-wrap');
       if (q.hasGraphic) {
         graphicWrap.classList.remove('hidden');
@@ -1647,7 +2272,6 @@
         graphicWrap.classList.add('hidden');
       }
 
-      // Fields
       const inputWrap = document.getElementById('quiz-inputs-wrap');
       inputWrap.innerHTML = '';
 
@@ -1663,9 +2287,8 @@
         inputWrap.appendChild(div);
       });
 
-      // Navigation button states
       document.getElementById('quiz-prev-btn').disabled = (currentQuizIndex === 0);
-      if (currentQuizIndex === quizQuestions.length - 1) {
+      if (currentQuizIndex === quizActiveQuestions.length - 1) {
         document.getElementById('quiz-next-btn').classList.add('hidden');
         document.getElementById('quiz-finish-btn').classList.remove('hidden');
       } else {
@@ -1692,7 +2315,7 @@
     }
 
     function nextQuizQuestion() {
-      if (currentQuizIndex < quizQuestions.length - 1) {
+      if (currentQuizIndex < quizActiveQuestions.length - 1) {
         currentQuizIndex++;
         renderQuizQuestion();
       }
@@ -1722,7 +2345,6 @@
       ctx.lineTo(W - 30, baselineY);
       ctx.stroke();
 
-      // Draw standard bell curve
       ctx.beginPath();
       ctx.moveTo(40, baselineY);
       for (let x = 40; x <= W - 40; x += 4) {
@@ -1739,7 +2361,6 @@
       ctx.closePath();
       ctx.fill();
 
-      // Mean line
       ctx.setLineDash([4, 4]);
       ctx.strokeStyle = '#1e1b4b';
       ctx.beginPath();
@@ -1756,12 +2377,11 @@
     }
 
     function initiateCoverUpCheck() {
-      // Switch view to cover-up screen
       document.getElementById('quiz-active-container').classList.add('hidden');
       document.getElementById('quiz-coverup-container').classList.remove('hidden');
-      // Reset verification checkboxes
       ['chk-units', 'chk-category', 'chk-outliers', 'chk-subparts'].forEach(id => {
-        document.getElementById(id).checked = false;
+        const el = document.getElementById(id);
+        if (el) el.checked = false;
       });
       playTone(440);
     }
@@ -1772,8 +2392,10 @@
     }
 
     function submitFinalQuiz() {
-      // Validate that all cover-up boxes were checked
-      const checkedAll = ['chk-units', 'chk-category', 'chk-outliers', 'chk-subparts'].every(id => document.getElementById(id).checked);
+      const checkedAll = ['chk-units', 'chk-category', 'chk-outliers', 'chk-subparts'].every(id => {
+        const el = document.getElementById(id);
+        return el && el.checked;
+      });
       if (!checkedAll) {
         alert("Action Plan Reminder: Take a moment to actively review all 4 checklist points. Rushing past the audit defeats the strategy!");
         return;
@@ -1783,13 +2405,13 @@
       const elapsedSec = Math.floor((Date.now() - quizStartTime) / 1000);
       const mins = Math.floor(elapsedSec / 60);
       const secs = elapsedSec % 60;
+      const durationStr = `${mins}m ${secs}s`;
 
-      // Grade the answers
       let totalFields = 0;
       let correctFields = 0;
       const breakdown = [];
 
-      quizQuestions.forEach((q, qIdx) => {
+      quizActiveQuestions.forEach((q, qIdx) => {
         q.fields.forEach(f => {
           totalFields++;
           const userVal = quizUserAnswers[f.id] || "No answer chosen";
@@ -1805,7 +2427,10 @@
         });
       });
 
-      // Show Results
+      // Save to localStorage for report generator
+      localStorage.setItem('statmaster_last_quiz_breakdown', JSON.stringify(breakdown));
+      localStorage.setItem('statmaster_last_duration', durationStr);
+
       document.getElementById('quiz-coverup-container').classList.add('hidden');
       const resultsWrap = document.getElementById('quiz-results-container');
       resultsWrap.classList.remove('hidden');
@@ -1824,7 +2449,6 @@
       localStorage.setItem('statmaster_completed_quizzes', pastCount);
       updateMasteryDisplay();
 
-      // Confetti if high score
       if (pct >= 80) {
         confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
         playTone(523);
@@ -1834,7 +2458,6 @@
         playTone(300, 'square');
       }
 
-      // Breakdown list
       const listEl = document.getElementById('results-breakdown-list');
       listEl.innerHTML = '';
       breakdown.forEach(item => {
@@ -1853,13 +2476,12 @@
     }
 
     function startNewQuiz() {
-      quizUserAnswers = {};
-      currentQuizIndex = 0;
-      quizHighlightedTokensCount = 0;
+      // Return to launchpad so Connor explicitly initiates the next timed session
       document.getElementById('quiz-results-container').classList.add('hidden');
-      document.getElementById('quiz-active-container').classList.remove('hidden');
-      startQuizTimer();
-      renderQuizQuestion();
+      document.getElementById('quiz-intro-container').classList.remove('hidden');
+      if (quizTimerInterval) clearInterval(quizTimerInterval);
+      const timerEl = document.getElementById('quiz-timer');
+      if (timerEl) timerEl.textContent = "00:00";
     }
 
     // Window load initialization
@@ -1868,8 +2490,8 @@
       updateMasteryDisplay();
       calcOutlierBounds();
       renderMatchmakerProblem();
-      startQuizTimer();
-      renderQuizQuestion();
+      renderGraphAuditScenario();
+      // Pacing timer is intentionally NOT started here; starts only upon clicking Begin Mini-Quiz!
     };
   </script>
 </body>
