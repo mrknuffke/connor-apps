@@ -110,12 +110,20 @@
         </div>
 
         <!-- Audio Speed Control -->
-        <div class="flex items-center bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700 text-xs text-slate-300 gap-1.5" title="Speech Synthesis Speed">
+        <div class="flex items-center bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700 text-xs text-slate-300 gap-1.5" title="Speech Speed">
           <i class="fa-solid fa-gauge text-slate-400"></i>
           <select id="tts-rate" onchange="updateTtsRate(this.value)" class="bg-transparent text-xs text-slate-200 outline-none cursor-pointer">
             <option value="0.75" class="bg-slate-900">0.75x</option>
             <option value="0.9" selected class="bg-slate-900">0.9x</option>
             <option value="1.0" class="bg-slate-900">1.0x</option>
+          </select>
+        </div>
+
+        <!-- Voice Engine Selector -->
+        <div class="hidden sm:flex items-center bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700 text-xs text-slate-300 gap-1.5" title="Audio Voice Engine">
+          <i class="fa-solid fa-volume-high text-rose-400"></i>
+          <select id="tts-voice-select" onchange="updateSelectedVoice(this.value)" class="bg-transparent text-xs text-slate-200 outline-none cursor-pointer max-w-[130px] truncate">
+            <option value="neural-mp3" class="bg-slate-900 font-bold text-amber-300">★ Studio Neural</option>
           </select>
         </div>
 
@@ -968,16 +976,135 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Speak Text via Web Speech API
+    // High-Fidelity Audio Engine & Voice Synthesis
+    let activeAudioPlayer = null;
+    let availableVoices = [];
+    let selectedVoice = null;
+    let voiceMode = 'neural-mp3';
+
+    function stopAllAudio() {
+      if (activeAudioPlayer) {
+        activeAudioPlayer.pause();
+        activeAudioPlayer.currentTime = 0;
+        activeAudioPlayer = null;
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function playAudioFile(src, onEndedCallback, fallbackText) {
+      stopAllAudio();
+      const audio = new Audio(src);
+      activeAudioPlayer = audio;
+      audio.playbackRate = ttsRate;
+      audio.onended = () => {
+        if (activeAudioPlayer === audio) activeAudioPlayer = null;
+        if (onEndedCallback) onEndedCallback();
+      };
+      audio.onerror = () => {
+        console.warn("Audio file failed to load, falling back to speech synthesis:", src);
+        if (fallbackText) speakText(fallbackText);
+      };
+      audio.play().catch(e => {
+        console.warn("Autoplay blocked or error, falling back to speech synthesis:", e);
+        if (fallbackText) speakText(fallbackText);
+      });
+    }
+
+    function playQuestionAudio(qid, fallbackText) {
+      if (voiceMode === 'neural-mp3') {
+        playAudioFile(`audio/q${qid}.mp3`, null, fallbackText);
+      } else {
+        speakText(fallbackText);
+      }
+    }
+
+    function playAnswerAudio(qid) {
+      const q = QUESTIONS_DATA.find(item => item.id === qid);
+      if (!q) return;
+      const script = connorScripts[qid] || q.default_answer_hanzi;
+      
+      // If untouched model response and in neural-mp3 mode, play studio MP3
+      if (voiceMode === 'neural-mp3' && script.trim() === q.default_answer_hanzi.trim()) {
+        playAudioFile(`audio/a${qid}.mp3`, null, script);
+      } else {
+        // Connor personalized his response: speak with chosen natural voice
+        speakText(script);
+      }
+    }
+
+    function playEqAudio(eqid, fallbackText) {
+      if (voiceMode === 'neural-mp3') {
+        playAudioFile(`audio/eq${eqid}.mp3`, null, fallbackText);
+      } else {
+        speakText(fallbackText);
+      }
+    }
+
+    function populateVoices() {
+      if (!('speechSynthesis' in window)) return;
+      const allVoices = window.speechSynthesis.getVoices();
+      availableVoices = allVoices.filter(v => 
+        v.lang.toLowerCase().startsWith('zh') || v.lang.toLowerCase().includes('cmn') || v.name.toLowerCase().includes('chinese')
+      );
+
+      const voiceSelect = document.getElementById('tts-voice-select');
+      if (!voiceSelect) return;
+
+      voiceSelect.innerHTML = `<option value="neural-mp3" class="bg-slate-900 font-bold text-amber-300">★ Studio Neural (Xiaoxiao/Yunxi)</option>`;
+
+      availableVoices.forEach((v, i) => {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.className = "bg-slate-900 text-slate-200";
+        let label = v.name;
+        if (v.name.includes("Google") || v.name.includes("Enhanced") || v.name.includes("Natural") || v.name.includes("Siri")) {
+          label = `✨ ${label}`;
+        }
+        opt.innerText = `${label} (${v.lang})`;
+        voiceSelect.appendChild(opt);
+      });
+
+      // Prefer high-quality voices
+      const preferred = availableVoices.find(v => 
+        v.name.includes("Google") || v.name.includes("Enhanced") || v.name.includes("Natural") || v.name.includes("Xiaoxiao")
+      ) || availableVoices.find(v => v.lang.replace('_', '-').toLowerCase().startsWith('zh-cn')) || availableVoices[0];
+
+      if (preferred) selectedVoice = preferred;
+    }
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = populateVoices;
+      populateVoices();
+    }
+
+    function updateSelectedVoice(val) {
+      if (val === 'neural-mp3') {
+        voiceMode = 'neural-mp3';
+      } else {
+        voiceMode = 'tts';
+        const idx = parseInt(val);
+        if (!isNaN(idx) && availableVoices[idx]) {
+          selectedVoice = availableVoices[idx];
+        }
+      }
+    }
+
+    // Speak Text via Web Speech API with Pitch & Voice Optimization
     function speakText(text, lang = 'zh-CN') {
       if (!('speechSynthesis' in window)) {
         alert("Speech synthesis not supported in this browser.");
         return;
       }
-      window.speechSynthesis.cancel();
+      stopAllAudio();
       const utter = new SpeechSynthesisUtterance(text);
       utter.lang = lang;
       utter.rate = ttsRate;
+      utter.pitch = 1.05; // Warmer inflection, less mechanical
+      if (selectedVoice) {
+        utter.voice = selectedVoice;
+      }
       window.speechSynthesis.speak(utter);
     }
 
@@ -1006,7 +1133,7 @@
               <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Question Prompt</span>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="speakText('${q.q_hanzi.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 text-xs flex items-center gap-1 font-semibold transition" title="Listen to Question">
+              <button onclick="playQuestionAudio(${q.id}, '${q.q_hanzi.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 text-xs flex items-center gap-1 font-semibold transition" title="Listen to Ms. Wang speak this prompt">
                 <i class="fa-solid fa-volume-high"></i> Listen Prompt
               </button>
             </div>
@@ -1024,7 +1151,7 @@
                 <i class="fa-solid fa-pen text-rose-400 text-[10px]"></i> Connor's Response Script:
               </span>
               <div class="flex items-center gap-2">
-                <button onclick="speakText(document.getElementById('script-input-${q.id}').value)" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium">
+                <button onclick="playAnswerAudio(${q.id})" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium" title="Listen to spoken response">
                   <i class="fa-solid fa-volume-high"></i> Listen to My Script
                 </button>
                 <button onclick="resetSingleScript(${q.id})" class="text-[11px] text-slate-400 hover:text-slate-200 underline">
@@ -1063,7 +1190,7 @@
           <div>
             <div class="flex items-center justify-between mb-1">
               <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Option ${idx + 1} (${eq.qword})</span>
-              <button onclick="speakText('${eq.hanzi.replace(/'/g, "\\'")}')" class="text-xs text-indigo-300 hover:text-white" title="Listen">
+              <button onclick="playEqAudio(${idx + 1}, '${eq.hanzi.replace(/'/g, "\\'")}')" class="text-xs text-indigo-300 hover:text-white" title="Listen">
                 <i class="fa-solid fa-volume-high"></i>
               </button>
             </div>
@@ -1204,12 +1331,11 @@
 
     function speakFcQuestion() {
       const q = QUESTIONS_DATA[currentCardIndex];
-      speakText(q.q_hanzi);
+      playQuestionAudio(q.id, q.q_hanzi);
     }
     function speakFcAnswer() {
       const q = QUESTIONS_DATA[currentCardIndex];
-      const script = connorScripts[q.id] || q.default_answer_hanzi;
-      speakText(script);
+      playAnswerAudio(q.id);
     }
 
     // MediaRecorder for Flashcard Voice Practice
@@ -1289,7 +1415,7 @@
       document.getElementById('sim-trans').innerText = q.q_trans;
 
       // Speak question automatically
-      speakText(q.q_hanzi);
+      playQuestionAudio(q.id, q.q_hanzi);
 
       // Hint setup
       const script = connorScripts[q.id] || q.default_answer_hanzi;
@@ -1304,7 +1430,7 @@
 
     function speakSimCurrentQuestion() {
       const q = simQuestionsList[simCurrentQIdx];
-      if (q) speakText(q.q_hanzi);
+      if (q) playQuestionAudio(q.id, q.q_hanzi);
     }
 
     function toggleSimHint() {
@@ -1351,14 +1477,14 @@
         // Render teacher questions choices in final box
         const finContainer = document.getElementById('sim-final-questions');
         finContainer.innerHTML = '';
-        TEACHER_QUESTIONS.forEach(eq => {
+        TEACHER_QUESTIONS.forEach((eq, idx) => {
           const card = document.createElement('div');
           card.className = "p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs";
           card.innerHTML = `
             <div class="chinese-font font-bold text-white text-sm">${eq.hanzi}</div>
             <div class="pinyin-text text-rose-300 font-mono text-[11px] mt-0.5">${eq.pinyin}</div>
             <div class="trans-text text-slate-400 text-[11px] italic mt-0.5">${eq.trans}</div>
-            <button onclick="speakText('${eq.hanzi.replace(/'/g, "\\'")}')" class="mt-2 text-[11px] text-indigo-400 hover:text-white flex items-center gap-1 font-semibold">
+            <button onclick="playEqAudio(${idx + 1}, '${eq.hanzi.replace(/'/g, "\\'")}')" class="mt-2 text-[11px] text-indigo-400 hover:text-white flex items-center gap-1 font-semibold">
               <i class="fa-solid fa-volume-high"></i> Listen to question
             </button>
           `;
