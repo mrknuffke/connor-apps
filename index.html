@@ -2,14 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Connor's Grade 9 Study Hub • Singapore American School</title>
-  <meta name="theme-color" content="#090d16">
+  
+  <!-- Progressive Web App (PWA) & iPad Optimization -->
+  <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Study Hub">
+  <meta name="apple-mobile-web-app-title" content="Connor Hub">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+  
+  <!-- Tailwind CSS with Dark Mode Class Strategy -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    };
+  </script>
+  
+  <!-- Prevent Theme FOUC -->
+  <script>
+    (function() {
+      var theme = localStorage.getItem('connor_study_theme') || 'dark';
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -17,6 +41,7 @@
     
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
+      touch-action: manipulation;
     }
     .mono {
       font-family: 'JetBrains Mono', monospace;
@@ -28,13 +53,13 @@
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #090d16;
+      background: transparent;
     }
     ::-webkit-scrollbar-thumb {
-      background: #1e293b;
+      background: #94a3b8;
       border-radius: 9999px;
     }
-    ::-webkit-scrollbar-thumb:hover {
+    .dark ::-webkit-scrollbar-thumb {
       background: #334155;
     }
 
@@ -46,39 +71,45 @@
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-200">
 
   <!-- Top Global Header -->
-  <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40">
+  <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80 sticky top-0 z-40">
     <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
       
       <!-- Brand & Title -->
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-amber-400 flex items-center justify-center font-black text-white text-lg shadow-md shadow-indigo-950/50">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-amber-400 flex items-center justify-center font-black text-white text-lg shadow-md shadow-indigo-500/20 dark:shadow-indigo-950/50">
           <i class="fa-solid fa-graduation-cap"></i>
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-base sm:text-lg font-black tracking-tight text-white">Connor's Study Hub</h1>
-            <span class="text-[11px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold px-2 py-0.5 rounded-full">Grade 9 • SAS</span>
+            <h1 class="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white">Connor's Study Hub</h1>
+            <span class="text-[11px] bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 dark:border-indigo-500/30 font-bold px-2 py-0.5 rounded-full">Grade 9 • SAS</span>
           </div>
-          <p class="text-xs text-slate-400">Singapore American School • High School Mastery Portal</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Singapore American School • High School Mastery Portal</p>
         </div>
       </div>
 
-      <!-- Quick Utilities & Clock -->
-      <div class="flex items-center gap-2.5">
+      <!-- Quick Utilities, Focus Clock & Theme Toggle -->
+      <div class="flex items-center gap-2 sm:gap-2.5">
         <!-- Live Clock -->
-        <div class="hidden sm:flex items-center gap-2 bg-slate-950/80 border border-slate-800 px-3 py-1.5 rounded-xl text-xs font-mono text-slate-300">
-          <i class="fa-regular fa-clock text-indigo-400"></i>
+        <div class="hidden sm:flex items-center gap-2 bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl text-xs font-mono text-slate-700 dark:text-slate-300">
+          <i class="fa-regular fa-clock text-indigo-500 dark:text-indigo-400"></i>
           <span id="live-clock">--:--</span>
-          <span class="text-slate-500 text-[10px]">SGT</span>
+          <span class="text-slate-400 dark:text-slate-500 text-[10px]">SGT</span>
         </div>
 
         <!-- Focus Timer Toggle -->
-        <button onclick="toggleStudyTimer()" id="timer-btn" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-2 transition" title="Start a 25-Minute Focus Session">
-          <i class="fa-solid fa-stopwatch text-amber-400"></i>
+        <button onclick="toggleStudyTimer()" id="timer-btn" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-semibold flex items-center gap-2 transition" title="Start a 25-Minute Focus Session">
+          <i class="fa-solid fa-stopwatch text-amber-500 dark:text-amber-400"></i>
           <span id="timer-display">25:00 Focus</span>
+        </button>
+
+        <!-- Unified Light / Dark Mode Toggle Button -->
+        <button onclick="toggleTheme()" id="theme-toggle-btn" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-sm transition" title="Toggle Light / Dark Mode">
+          <i class="fa-solid fa-moon text-indigo-600 dark:hidden"></i>
+          <i class="fa-solid fa-sun text-amber-400 hidden dark:inline"></i>
         </button>
       </div>
 
@@ -86,32 +117,32 @@
   </header>
 
   <!-- Hero Banner -->
-  <section class="bg-gradient-to-b from-indigo-950/30 via-slate-950 to-slate-950 border-b border-slate-800/60 py-8 px-4">
+  <section class="bg-gradient-to-b from-indigo-50/80 via-slate-50 to-slate-50 dark:from-indigo-950/30 dark:via-slate-950 dark:to-slate-950 border-b border-slate-200 dark:border-slate-800/60 py-8 px-4">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
       
       <div class="space-y-2 max-w-2xl">
-        <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-300 text-xs font-bold">
-          <i class="fa-solid fa-bolt text-amber-400"></i>
+        <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-800 dark:text-amber-300 text-xs font-bold">
+          <i class="fa-solid fa-bolt text-amber-500 dark:text-amber-400"></i>
           <span>Welcome Back, Connor! Ready to conquer your goals.</span>
         </div>
-        <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
           Your Personal Grade 9 Learning Launchpad
         </h2>
-        <p class="text-sm text-slate-400 leading-relaxed">
+        <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
           Access your interactive course trainers, study reports, spoken mock exams, and upcoming assessment countdowns in one focused workspace.
         </p>
       </div>
 
       <!-- Quick Assessment Countdown Card -->
-      <div class="bg-slate-900/90 border border-rose-900/40 p-4 sm:p-5 rounded-2xl shadow-xl flex items-center gap-4 shrink-0 max-w-sm">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-white text-xl font-bold shadow-md shadow-rose-950/40 shrink-0">
+      <div class="bg-white dark:bg-slate-900/90 border border-rose-200 dark:border-rose-900/40 p-4 sm:p-5 rounded-2xl shadow-md dark:shadow-xl flex items-center gap-4 shrink-0 max-w-sm">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-white text-xl font-bold shadow-md shadow-rose-600/20 dark:shadow-rose-950/40 shrink-0">
           <i class="fa-solid fa-microphone"></i>
         </div>
         <div class="space-y-0.5">
-          <div class="text-[11px] font-extrabold text-rose-400 uppercase tracking-wider">Next High Priority</div>
-          <div class="text-sm font-bold text-white">Chinese ILS Speaking Exam</div>
-          <div class="text-xs text-slate-400">Wednesday, Oct 14 with Ms. Wang</div>
-          <a href="Grade 9 Chinese/index.html" class="inline-flex items-center gap-1 text-xs text-rose-300 hover:text-rose-200 font-bold pt-1">
+          <div class="text-[11px] font-extrabold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Next High Priority</div>
+          <div class="text-sm font-bold text-slate-900 dark:text-white">Chinese ILS Speaking Exam</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400">Wednesday, Oct 14 with Ms. Wang</div>
+          <a href="Grade 9 Chinese/index.html" class="inline-flex items-center gap-1 text-xs text-rose-600 dark:text-rose-300 hover:text-rose-700 dark:hover:text-rose-200 font-bold pt-1">
             <span>Open Practice Hub</span>
             <i class="fa-solid fa-arrow-right text-[10px]"></i>
           </a>
@@ -127,8 +158,8 @@
     <!-- Active Subjects Grid -->
     <section class="space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-sm font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-          <i class="fa-solid fa-book-open text-indigo-400"></i>
+        <h3 class="text-sm font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-book-open text-indigo-500 dark:text-indigo-400"></i>
           <span>Active Subject Applications</span>
         </h3>
         <span class="text-xs text-slate-500 font-medium">2 Course Modules Installed</span>
@@ -137,112 +168,112 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         <!-- CARD 1: GRADE 9 CHINESE -->
-        <div class="card-hover-effect bg-slate-900 border border-rose-900/30 hover:border-rose-500/50 rounded-3xl p-6 sm:p-7 shadow-lg relative overflow-hidden flex flex-col justify-between group">
+        <div class="card-hover-effect bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/30 hover:border-rose-400 dark:hover:border-rose-500/50 rounded-3xl p-6 sm:p-7 shadow-sm dark:shadow-lg relative overflow-hidden flex flex-col justify-between group">
           
           <!-- Background Glow Effect -->
-          <div class="absolute -right-16 -top-16 w-44 h-44 bg-rose-600/10 rounded-full blur-3xl pointer-events-none group-hover:bg-rose-600/20 transition-all duration-500"></div>
+          <div class="absolute -right-16 -top-16 w-44 h-44 bg-rose-500/5 dark:bg-rose-600/10 rounded-full blur-3xl pointer-events-none group-hover:bg-rose-500/10 dark:group-hover:bg-rose-600/20 transition-all duration-500"></div>
 
           <div>
             <!-- Card Top Bar -->
             <div class="flex items-start justify-between gap-3 mb-4">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-rose-950/40">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-rose-600/20 dark:shadow-rose-950/40">
                 <i class="fa-solid fa-microphone-lines"></i>
               </div>
               <div class="flex flex-col items-end">
-                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/10 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/20 dark:border-rose-500/30">
                   New Unit 1 Trainer
                 </span>
-                <span class="text-[11px] text-slate-400 mt-1 font-mono">Exam: Oct 14</span>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-mono">Exam: Oct 14</span>
               </div>
             </div>
 
             <!-- Subject Title & Scope -->
             <div class="space-y-1 mb-4">
               <div class="flex items-center gap-2">
-                <h4 class="text-xl font-black text-white group-hover:text-rose-300 transition">华语口语通 • Chinese ILS Master</h4>
+                <h4 class="text-xl font-black text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-300 transition">华语口语通 • Chinese ILS Master</h4>
               </div>
-              <p class="text-xs text-slate-400">Chinese Intermediate II • Unit 1: School Life & Shopping (学习与购物)</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Chinese Intermediate II • Unit 1: School Life & Shopping (学习与购物)</p>
             </div>
 
             <!-- Feature Bullet Chips -->
             <div class="grid grid-cols-2 gap-2 text-xs mb-6">
-              <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 flex items-center gap-2 text-slate-300">
-                <i class="fa-solid fa-chalkboard-user text-rose-400 text-xs"></i>
+              <div class="p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <i class="fa-solid fa-chalkboard-user text-rose-500 dark:text-rose-400 text-xs"></i>
                 <span class="text-[11px] font-medium">10 Question Scripts</span>
               </div>
-              <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 flex items-center gap-2 text-slate-300">
-                <i class="fa-solid fa-file-audio text-amber-400 text-xs"></i>
+              <div class="p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <i class="fa-solid fa-file-audio text-amber-500 dark:text-amber-400 text-xs"></i>
                 <span class="text-[11px] font-medium">Ms. Wang Audio Player</span>
               </div>
-              <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 flex items-center gap-2 text-slate-300">
-                <i class="fa-solid fa-stopwatch text-sky-400 text-xs"></i>
+              <div class="p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <i class="fa-solid fa-stopwatch text-sky-500 dark:text-sky-400 text-xs"></i>
                 <span class="text-[11px] font-medium">4-5 Min Mock Interview</span>
               </div>
-              <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 flex items-center gap-2 text-slate-300">
-                <i class="fa-solid fa-check-double text-emerald-400 text-xs"></i>
+              <div class="p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <i class="fa-solid fa-check-double text-emerald-500 dark:text-emerald-400 text-xs"></i>
                 <span class="text-[11px] font-medium">8 Sentence Structures</span>
               </div>
             </div>
           </div>
 
           <!-- Launch Button -->
-          <a href="Grade 9 Chinese/index.html" class="w-full py-3.5 px-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-md shadow-rose-950/50 transition flex items-center justify-center gap-2 group-hover:gap-3">
+          <a href="Grade 9 Chinese/index.html" class="w-full py-3.5 px-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-md shadow-rose-600/20 dark:shadow-rose-950/50 transition flex items-center justify-center gap-2 group-hover:gap-3">
             <span>Launch Chinese ILS Master</span>
             <i class="fa-solid fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
           </a>
         </div>
 
         <!-- CARD 2: GRADE 9 MATH -->
-        <div class="card-hover-effect bg-slate-900 border border-indigo-900/30 hover:border-indigo-500/50 rounded-3xl p-6 sm:p-7 shadow-lg relative overflow-hidden flex flex-col justify-between group">
+        <div class="card-hover-effect bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/30 hover:border-blue-400 dark:hover:border-blue-500/50 rounded-3xl p-6 sm:p-7 shadow-sm dark:shadow-lg relative overflow-hidden flex flex-col justify-between group">
           
           <!-- Background Glow Effect -->
-          <div class="absolute -right-16 -top-16 w-44 h-44 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none group-hover:bg-indigo-600/20 transition-all duration-500"></div>
+          <div class="absolute -right-16 -top-16 w-44 h-44 bg-blue-500/5 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none group-hover:bg-blue-500/10 dark:group-hover:bg-blue-600/20 transition-all duration-500"></div>
 
           <div>
             <!-- Card Top Bar -->
             <div class="flex items-start justify-between gap-3 mb-4">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-indigo-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-indigo-950/40">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-blue-600/20 dark:shadow-blue-950/40">
                 <i class="fa-solid fa-chart-simple"></i>
               </div>
               <div class="flex flex-col items-end">
-                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/20 dark:border-blue-500/30">
                   Reassessment Prep
                 </span>
-                <span class="text-[11px] text-slate-400 mt-1 font-mono">Integrated Math 1</span>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-mono">Integrated Math 1</span>
               </div>
             </div>
 
             <!-- Subject Title & Scope -->
             <div class="space-y-1 mb-4">
               <div class="flex items-center gap-2">
-                <h4 class="text-xl font-black text-white group-hover:text-indigo-300 transition">IM1 StatMaster</h4>
+                <h4 class="text-xl font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-300 transition">IM1 StatMaster</h4>
               </div>
-              <p class="text-xs text-slate-400">Integrated Math 1 • Unit 1: One-Variable Statistics Trainer</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Integrated Math 1 • Unit 1: One-Variable Statistics Trainer</p>
             </div>
 
             <!-- Feature Bullet Chips -->
             <div class="grid grid-cols-2 gap-2 text-xs mb-6">
-              <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 flex items-center gap-2 text-slate-300">
-                <i class="fa-solid fa-compass text-indigo-400 text-xs"></i>
+              <div class="p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <i class="fa-solid fa-compass text-blue-500 dark:text-blue-400 text-xs"></i>
                 <span class="text-[11px] font-medium">Rule Matrix & Anchors</span>
               </div>
-              <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 flex items-center gap-2 text-slate-300">
-                <i class="fa-solid fa-scale-balanced text-amber-400 text-xs"></i>
+              <div class="p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <i class="fa-solid fa-scale-balanced text-amber-500 dark:text-amber-400 text-xs"></i>
                 <span class="text-[11px] font-medium">Center & Spread Match</span>
               </div>
-              <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 flex items-center gap-2 text-slate-300">
-                <i class="fa-solid fa-pen-ruler text-teal-400 text-xs"></i>
+              <div class="p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <i class="fa-solid fa-pen-ruler text-teal-500 dark:text-teal-400 text-xs"></i>
                 <span class="text-[11px] font-medium">Boxplot & Graph Audits</span>
               </div>
-              <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 flex items-center gap-2 text-slate-300">
-                <i class="fa-solid fa-stopwatch text-purple-400 text-xs"></i>
+              <div class="p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <i class="fa-solid fa-stopwatch text-purple-500 dark:text-purple-400 text-xs"></i>
                 <span class="text-[11px] font-medium">Paced Adaptive Quiz</span>
               </div>
             </div>
           </div>
 
           <!-- Launch Button -->
-          <a href="Grade 9 Math/index.html" class="w-full py-3.5 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-md shadow-indigo-950/50 transition flex items-center justify-center gap-2 group-hover:gap-3">
+          <a href="Grade 9 Math/index.html" class="w-full py-3.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-md shadow-blue-600/20 dark:shadow-blue-950/50 transition flex items-center justify-center gap-2 group-hover:gap-3">
             <span>Launch Math StatMaster</span>
             <i class="fa-solid fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
           </a>
@@ -252,17 +283,17 @@
     </section>
 
     <!-- Upcoming Assessment Goals & Milestone Tracker -->
-    <section class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-5">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+    <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-5 shadow-sm dark:shadow-lg">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800/80 pb-4">
         <div>
-          <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-list-check text-emerald-400"></i>
+          <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-emerald-500 dark:text-emerald-400"></i>
             <span>Connor's Assessment Prep Checklist</span>
           </h3>
-          <p class="text-xs text-slate-400 mt-0.5">Check off milestones as you rehearse for your upcoming speaking test.</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Check off milestones as you rehearse for your upcoming speaking test.</p>
         </div>
         <div class="flex items-center gap-2">
-          <span id="checklist-progress-text" class="text-xs font-mono font-bold text-emerald-400">0 / 5 Completed</span>
+          <span id="checklist-progress-text" class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">0 / 5 Completed</span>
         </div>
       </div>
 
@@ -274,45 +305,45 @@
 
     <!-- Future Subjects / Extensible Module Slots -->
     <section class="space-y-4">
-      <h3 class="text-sm font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-        <i class="fa-solid fa-shapes text-slate-500"></i>
+      <h3 class="text-sm font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
+        <i class="fa-solid fa-shapes text-slate-400 dark:text-slate-500"></i>
         <span>Upcoming Grade 9 Subjects (Ready to Add)</span>
       </h3>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <div class="p-5 rounded-2xl bg-slate-900/50 border border-slate-800 border-dashed flex flex-col justify-between gap-3 text-xs">
+        <div class="p-5 rounded-2xl bg-white/70 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 border-dashed flex flex-col justify-between gap-3 text-xs shadow-sm">
           <div>
-            <div class="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center justify-center text-sm font-bold mb-2">
+            <div class="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 flex items-center justify-center text-sm font-bold mb-2">
               <i class="fa-solid fa-flask"></i>
             </div>
-            <div class="font-bold text-white text-sm">Grade 9 Science</div>
-            <div class="text-slate-400 mt-1">Physics & Chemistry units, coupled systems, lab trainers.</div>
+            <div class="font-bold text-slate-900 dark:text-white text-sm">Grade 9 Science</div>
+            <div class="text-slate-500 dark:text-slate-400 mt-1">Physics & Chemistry units, coupled systems, lab trainers.</div>
           </div>
-          <span class="text-[11px] text-teal-400 font-semibold flex items-center gap-1">
+          <span class="text-[11px] text-teal-600 dark:text-teal-400 font-semibold flex items-center gap-1">
             <i class="fa-solid fa-clock"></i> Module Ready
           </span>
         </div>
 
-        <div class="p-5 rounded-2xl bg-slate-900/50 border border-slate-800 border-dashed flex flex-col justify-between gap-3 text-xs">
+        <div class="p-5 rounded-2xl bg-white/70 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 border-dashed flex flex-col justify-between gap-3 text-xs shadow-sm">
           <div>
-            <div class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center text-sm font-bold mb-2">
+            <div class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center text-sm font-bold mb-2">
               <i class="fa-solid fa-feather-pointed"></i>
             </div>
-            <div class="font-bold text-white text-sm">English / Humanities</div>
-            <div class="text-slate-400 mt-1">Literary analysis, vocabulary expansion, essay structures.</div>
+            <div class="font-bold text-slate-900 dark:text-white text-sm">English / Humanities</div>
+            <div class="text-slate-500 dark:text-slate-400 mt-1">Literary analysis, vocabulary expansion, essay structures.</div>
           </div>
-          <span class="text-[11px] text-purple-400 font-semibold flex items-center gap-1">
+          <span class="text-[11px] text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1">
             <i class="fa-solid fa-clock"></i> Module Ready
           </span>
         </div>
 
-        <div class="p-5 rounded-2xl bg-slate-900/50 border border-slate-800 border-dashed flex flex-col justify-between gap-3 text-xs">
+        <div class="p-5 rounded-2xl bg-white/70 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 border-dashed flex flex-col justify-between gap-3 text-xs shadow-sm">
           <div>
-            <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-sm font-bold mb-2">
+            <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center text-sm font-bold mb-2">
               <i class="fa-solid fa-folder-plus"></i>
             </div>
-            <div class="font-bold text-white text-sm">Add New Subject</div>
-            <div class="text-slate-400 mt-1">Create dedicated trainer folders for other Grade 9 subjects anytime.</div>
+            <div class="font-bold text-slate-900 dark:text-white text-sm">Add New Subject</div>
+            <div class="text-slate-500 dark:text-slate-400 mt-1">Create dedicated trainer folders for other Grade 9 subjects anytime.</div>
           </div>
           <span class="text-[11px] text-slate-500 font-semibold">Drop in new folder</span>
         </div>
@@ -320,21 +351,21 @@
     </section>
 
     <!-- SAS Quick Links Strip -->
-    <section class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
-      <div class="flex items-center gap-2 text-slate-400">
-        <i class="fa-solid fa-link text-indigo-400"></i>
-        <span class="font-bold text-slate-300">School Portals:</span>
+    <section class="bg-white/80 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
+      <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+        <i class="fa-solid fa-link text-indigo-500 dark:text-indigo-400"></i>
+        <span class="font-bold text-slate-800 dark:text-slate-300">School Portals:</span>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <a href="https://web.toddleapp.com" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center gap-1.5">
+        <a href="https://web.toddleapp.com" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
           <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
           <span>Toddle</span>
         </a>
-        <a href="https://sas.schoology.com" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center gap-1.5">
+        <a href="https://sas.schoology.com" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
           <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
           <span>Schoology</span>
         </a>
-        <a href="https://mail.google.com" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center gap-1.5">
+        <a href="https://mail.google.com" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
           <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
           <span>SAS Mail</span>
         </a>
@@ -344,19 +375,42 @@
   </main>
 
   <!-- Global Footer -->
-  <footer class="bg-slate-900 border-t border-slate-800 py-6 px-4 text-center text-xs text-slate-500">
+  <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 px-4 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
     <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
       <div>Connor's Grade 9 Study Hub • Singapore American School (SAS)</div>
       <div class="flex items-center gap-4">
-        <a href="Grade 9 Chinese/index.html" class="hover:text-slate-300 transition">Grade 9 Chinese</a>
+        <a href="Grade 9 Chinese/index.html" class="hover:text-slate-900 dark:hover:text-slate-200 transition">Grade 9 Chinese</a>
         <span>•</span>
-        <a href="Grade 9 Math/index.html" class="hover:text-slate-300 transition">Grade 9 Math</a>
+        <a href="Grade 9 Math/index.html" class="hover:text-slate-900 dark:hover:text-slate-200 transition">Grade 9 Math</a>
       </div>
     </div>
   </footer>
 
   <!-- App Script Logic -->
   <script>
+    // Progressive Web App (PWA) Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => {
+          console.log('SW registration note:', err);
+        });
+      });
+    }
+
+    // Light / Dark Theme Management
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const nextTheme = isDark ? 'light' : 'dark';
+      if (nextTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      try {
+        localStorage.setItem('connor_study_theme', nextTheme);
+      } catch (e) {}
+    }
+
     // Live Clock SGT
     function updateClock() {
       const now = new Date();
@@ -379,7 +433,7 @@
 
       if (!timerRunning) {
         timerRunning = true;
-        btn.className = "px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-semibold flex items-center gap-2 transition";
+        btn.className = "px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 text-xs font-semibold flex items-center gap-2 transition";
         focusTimerInterval = setInterval(() => {
           if (focusSecondsRemaining > 0) {
             focusSecondsRemaining--;
@@ -398,7 +452,7 @@
         clearInterval(focusTimerInterval);
         timerRunning = false;
         focusSecondsRemaining = 25 * 60;
-        btn.className = "px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-2 transition";
+        btn.className = "px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-semibold flex items-center gap-2 transition";
         disp.innerText = "25:00 Focus";
       }
     }
@@ -450,17 +504,17 @@
 
         const div = document.createElement('div');
         div.className = `p-3.5 rounded-2xl border transition cursor-pointer flex items-start gap-3 ${
-          isDone ? 'bg-emerald-950/30 border-emerald-500/50 text-emerald-200' : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:border-slate-700'
+          isDone ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-500/50 text-emerald-800 dark:text-emerald-200' : 'bg-slate-100/70 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
         }`;
         div.onclick = () => toggleMilestone(m.id);
 
         div.innerHTML = `
           <div class="mt-0.5">
-            <i class="fa-solid ${isDone ? 'fa-square-check text-emerald-400 text-base' : 'fa-square text-slate-600 text-base'}"></i>
+            <i class="fa-solid ${isDone ? 'fa-square-check text-emerald-600 dark:text-emerald-400 text-base' : 'fa-square text-slate-400 dark:text-slate-600 text-base'}"></i>
           </div>
           <div class="flex-1">
-            <div class="${isDone ? 'line-through text-slate-400' : 'text-slate-100 font-medium'} leading-snug">${m.text}</div>
-            <span class="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">${m.subject}</span>
+            <div class="${isDone ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100 font-medium'} leading-snug">${m.text}</div>
+            <span class="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/20 dark:border-rose-500/30">${m.subject}</span>
           </div>
         `;
         container.appendChild(div);

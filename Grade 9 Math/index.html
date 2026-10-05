@@ -4,12 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>IM1 StatMaster: 9th Grade One-Variable Statistics Trainer</title>
-  <meta name="theme-color" content="#312e81">
+  
+  <!-- Progressive Web App (PWA) & iPad Optimization -->
+  <link rel="manifest" href="../manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="StatMaster">
+  <meta name="apple-mobile-web-app-title" content="Math StatMaster">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+  
+  <!-- Tailwind CSS with Dark Mode Class Strategy -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    };
+  </script>
+  
+  <!-- Prevent Theme FOUC -->
+  <script>
+    (function() {
+      var theme = localStorage.getItem('connor_study_theme') || 'dark';
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -95,59 +118,170 @@
         box-shadow: none !important;
       }
     }
+
+    /* Seamless Dark Mode Palette Overrides for StatMaster */
+    html.dark body {
+      background-color: #020617 !important;
+      color: #f1f5f9 !important;
+    }
+    html.dark header {
+      background-color: rgba(15, 23, 42, 0.9) !important;
+      border-color: #1e293b !important;
+    }
+    html.dark .bg-white {
+      background-color: #0f172a !important;
+      color: #f1f5f9 !important;
+      border-color: #1e293b !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3) !important;
+    }
+    html.dark .bg-slate-50 {
+      background-color: #020617 !important;
+      color: #cbd5e1 !important;
+      border-color: #1e293b !important;
+    }
+    html.dark .bg-slate-100 {
+      background-color: #1e293b !important;
+      color: #f1f5f9 !important;
+      border-color: #334155 !important;
+    }
+    html.dark .bg-slate-200 {
+      background-color: #334155 !important;
+      color: #f1f5f9 !important;
+    }
+    html.dark .border-slate-200 {
+      border-color: #1e293b !important;
+    }
+    html.dark .border-slate-300 {
+      border-color: #334155 !important;
+    }
+    html.dark .text-slate-900,
+    html.dark .text-slate-800 {
+      color: #f8fafc !important;
+    }
+    html.dark .text-slate-700 {
+      color: #e2e8f0 !important;
+    }
+    html.dark .text-slate-600 {
+      color: #94a3b8 !important;
+    }
+    html.dark .text-slate-500 {
+      color: #64748b !important;
+    }
+    html.dark .cover-shield {
+      background: repeating-linear-gradient(
+        45deg,
+        #0f172a,
+        #0f172a 10px,
+        #1e293b 10px,
+        #1e293b 20px
+      ) !important;
+    }
+    html.dark .bg-emerald-50,
+    html.dark .bg-emerald-50\/70 {
+      background-color: rgba(6, 78, 59, 0.3) !important;
+      border-color: rgba(16, 185, 129, 0.3) !important;
+    }
+    html.dark .bg-amber-50,
+    html.dark .bg-amber-50\/70 {
+      background-color: rgba(120, 53, 15, 0.3) !important;
+      border-color: rgba(245, 158, 11, 0.3) !important;
+    }
+    html.dark .bg-blue-50,
+    html.dark .bg-blue-50\/70,
+    html.dark .bg-indigo-50,
+    html.dark .bg-indigo-50\/70 {
+      background-color: rgba(30, 58, 138, 0.3) !important;
+      border-color: rgba(59, 130, 246, 0.3) !important;
+    }
+    html.dark .bg-rose-50,
+    html.dark .bg-rose-50\/70 {
+      background-color: rgba(136, 19, 55, 0.3) !important;
+      border-color: rgba(244, 63, 94, 0.3) !important;
+    }
+    html.dark .text-emerald-950,
+    html.dark .text-emerald-900,
+    html.dark .text-emerald-800 {
+      color: #6ee7b7 !important;
+    }
+    html.dark .text-amber-950,
+    html.dark .text-amber-900,
+    html.dark .text-amber-800 {
+      color: #fcd34d !important;
+    }
+    html.dark .text-blue-950,
+    html.dark .text-blue-900,
+    html.dark .text-blue-800 {
+      color: #93c5fd !important;
+    }
+    html.dark .text-indigo-950,
+    html.dark .text-indigo-900,
+    html.dark .text-indigo-800 {
+      color: #a5b4fc !important;
+    }
+    html.dark #report-modal > div {
+      background-color: #0f172a !important;
+      color: #f1f5f9 !important;
+      border-color: #1e293b !important;
+    }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col antialiased transition-colors duration-200">
 
-  <header class="bg-indigo-900 text-white shadow-md sticky top-0 z-30">
+  <header class="bg-white/80 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 transition-colors">
     <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center space-x-3">
-        <a href="../index.html" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-950/80 hover:bg-indigo-800 text-indigo-200 hover:text-white text-xs font-semibold border border-indigo-700/60 transition shadow-sm" title="Back to Main Study Hub">
-          <i class="fa-solid fa-arrow-left text-indigo-300"></i>
+        <a href="../index.html" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold transition shadow-sm" title="Back to Main Study Hub">
+          <i class="fa-solid fa-arrow-left text-slate-500 dark:text-slate-400"></i>
           <span>Study Hub</span>
         </a>
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-indigo-500 flex items-center justify-center font-black text-xl shadow-inner">
-          <i class="fa-solid fa-chart-simple text-white"></i>
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-black text-lg text-white shadow-md shadow-blue-600/20 dark:shadow-blue-950/40">
+          <i class="fa-solid fa-chart-simple text-sm"></i>
         </div>
         <div>
-          <h1 class="text-lg font-bold tracking-tight flex items-center gap-2">
-            IM1 StatMaster
-            <span class="text-xs bg-amber-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">Test Reassessment Prep</span>
+          <h1 class="text-base sm:text-lg font-extrabold tracking-tight flex items-center gap-2 text-slate-900 dark:text-white">
+            <span>IM1 StatMaster</span>
+            <span class="text-xs bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/20 dark:border-blue-500/30 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Unit 1 Stats</span>
           </h1>
-          <p class="text-xs text-indigo-200">Integrated Math 1 • Unit 1: One-Variable Statistics</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Integrated Math 1 • Unit 1: One-Variable Statistics</p>
         </div>
       </div>
 
       <!-- Quick Actions & Stats -->
       <div class="flex items-center gap-2">
-        <span id="mastery-pill" class="hidden sm:flex text-xs bg-indigo-950/70 text-indigo-200 border border-indigo-700/60 px-2.5 py-1 rounded-full items-center gap-1.5 font-medium">
-          <i class="fa-solid fa-trophy text-amber-400"></i>
+        <span id="mastery-pill" class="hidden sm:flex text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 px-2.5 py-1 rounded-xl items-center gap-1.5 font-medium">
+          <i class="fa-solid fa-trophy text-amber-500 dark:text-amber-400"></i>
           <span id="mastery-text">Best Quiz: None yet</span>
         </span>
-        <button id="sound-btn" onclick="toggleSound()" title="Toggle Sound FX" class="w-8 h-8 rounded-lg bg-indigo-800/80 hover:bg-indigo-700 border border-indigo-700 flex items-center justify-center text-xs transition-colors">
+        <button id="sound-btn" onclick="toggleSound()" title="Toggle Sound FX" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-xs text-slate-700 dark:text-slate-300 transition">
           <i id="sound-icon" class="fa-solid fa-volume-high"></i>
         </button>
-        <button id="print-sheet-btn" onclick="openReportModal()" title="View & Print Study & Performance Report" class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-amber-400 hover:bg-amber-300 text-slate-950 transition-colors shadow-sm font-bold">
+        <button id="print-sheet-btn" onclick="openReportModal()" title="View & Print Study & Performance Report" class="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 transition shadow-sm">
           <i class="fa-solid fa-file-lines text-slate-900"></i>
           <span>Study Report</span>
+        </button>
+
+        <!-- Unified Light / Dark Mode Toggle Button -->
+        <button onclick="toggleTheme()" id="theme-toggle-btn" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-xs transition" title="Toggle Light / Dark Mode">
+          <i class="fa-solid fa-moon text-indigo-600 dark:hidden"></i>
+          <i class="fa-solid fa-sun text-amber-400 hidden dark:inline"></i>
         </button>
       </div>
 
       <!-- Navigation Tabs -->
-      <nav class="w-full sm:w-auto flex items-center space-x-1 sm:space-x-2 text-sm overflow-x-auto pb-1 sm:pb-0 border-t sm:border-t-0 border-indigo-800/60 pt-2 sm:pt-0">
-        <button onclick="switchTab('anchor')" id="tab-anchor" class="px-3 py-1.5 rounded-lg font-semibold transition-colors duration-150 flex items-center gap-1.5 bg-indigo-800 text-white border border-indigo-700 shadow-sm">
+      <nav class="w-full sm:w-auto flex items-center space-x-1 sm:space-x-1.5 text-xs font-semibold overflow-x-auto pb-1 sm:pb-0 border-t sm:border-t-0 border-slate-200 dark:border-slate-800 pt-2 sm:pt-0">
+        <button onclick="switchTab('anchor')" id="tab-anchor" class="px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 bg-blue-600 text-white shadow-sm">
           <i class="fa-solid fa-compass"></i>
           <span>Rule Matrix</span>
         </button>
-        <button onclick="switchTab('match')" id="tab-match" class="px-3 py-1.5 rounded-lg font-semibold transition-colors duration-150 flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60 border border-transparent">
+        <button onclick="switchTab('match')" id="tab-match" class="px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800">
           <i class="fa-solid fa-scale-balanced"></i>
           <span>Center & Spread</span>
         </button>
-        <button onclick="switchTab('graphAudit')" id="tab-graphAudit" class="px-3 py-1.5 rounded-lg font-semibold transition-colors duration-150 flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60 border border-transparent">
+        <button onclick="switchTab('graphAudit')" id="tab-graphAudit" class="px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800">
           <i class="fa-solid fa-pen-ruler"></i>
           <span>Execution Details</span>
         </button>
-        <button onclick="switchTab('quiz')" id="tab-quiz" class="px-3 py-1.5 rounded-lg font-semibold transition-colors duration-150 flex items-center gap-1.5 text-indigo-200 hover:text-white hover:bg-indigo-800/60 border border-transparent">
+        <button onclick="switchTab('quiz')" id="tab-quiz" class="px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800">
           <i class="fa-solid fa-stopwatch"></i>
           <span>Paced Mini-Quiz</span>
         </button>
@@ -821,6 +955,29 @@
   </div>
 
   <script>
+    // Progressive Web App (PWA) Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('../sw.js').catch(err => {
+          console.log('SW registration note:', err);
+        });
+      });
+    }
+
+    // Unified Light / Dark Theme Management
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const nextTheme = isDark ? 'light' : 'dark';
+      if (nextTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      try {
+        localStorage.setItem('connor_study_theme', nextTheme);
+      } catch (e) {}
+    }
+
     // Tab Switching Logic
     function switchTab(tabId) {
       ['anchor', 'match', 'graphAudit', 'quiz'].forEach(t => {
@@ -832,14 +989,14 @@
           void view.offsetWidth; // trigger reflow for smooth animation
           view.classList.add('tab-view');
 
-          btn.classList.add('bg-indigo-800', 'text-white', 'border-indigo-700', 'shadow-sm');
-          btn.classList.remove('text-indigo-200', 'hover:bg-indigo-800/60', 'border-transparent');
+          btn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+          btn.classList.remove('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-800');
         } else {
           view.classList.add('hidden');
           view.classList.remove('tab-view');
 
-          btn.classList.remove('bg-indigo-800', 'text-white', 'border-indigo-700', 'shadow-sm');
-          btn.classList.add('text-indigo-200', 'hover:bg-indigo-800/60', 'border-transparent');
+          btn.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+          btn.classList.add('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-800');
         }
       });
       // Gently repaint canvas without resetting user state or re-randomizing problem
