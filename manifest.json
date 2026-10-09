@@ -25,5 +25,25 @@
       "sizes": "180x180",
       "type": "image/png"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Chinese ILS",
+      "short_name": "Chinese",
+      "description": "Chinese Speaking & AI Partner",
+      "url": "./Grade 9 Chinese/index.html"
+    },
+    {
+      "name": "Math StatMaster",
+      "short_name": "Math",
+      "description": "IM1 Statistics Trainer",
+      "url": "./Grade 9 Math/index.html"
+    },
+    {
+      "name": "Choir & Music Theory",
+      "short_name": "Music",
+      "description": "Choir & Music Reading Literacy",
+      "url": "./Grade 9 Music/index.html"
+    }
   ]
 }

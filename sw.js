@@ -1,5 +1,5 @@
 // Service Worker for Connor's Grade 9 Study Hub (PWA)
-const CACHE_NAME = 'connor-study-hub-v1';
+const CACHE_NAME = 'connor-study-hub-v2';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -8,7 +8,8 @@ const CORE_ASSETS = [
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
   './Grade 9 Math/index.html',
-  './Grade 9 Chinese/index.html'
+  './Grade 9 Chinese/index.html',
+  './Grade 9 Music/index.html'
 ];
 
 self.addEventListener('install', (e) => {

@@ -22,6 +22,10 @@
     };
   </script>
   
+  <!-- Global Parent API Configuration (Optional) -->
+  <script src="config.js" onerror="/* local config optional */"></script>
+  <script src="../config.js" onerror="/* parent config optional */"></script>
+  
   <!-- Prevent Theme FOUC -->
   <script>
     (function() {
@@ -212,6 +216,10 @@
         <button onclick="switchTab('audio')" id="tab-audio" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800">
           <i class="fa-solid fa-headphones"></i>
           <span>Teacher Audio & Rubric</span>
+        </button>
+        <button onclick="switchTab('partner')" id="tab-partner" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i class="fa-solid fa-robot text-rose-500"></i>
+          <span>AI 对话伙伴 • AI Partner</span>
         </button>
       </nav>
     </div>
@@ -784,6 +792,221 @@
 
     </div>
 
+    <!-- ========================================== -->
+    <!-- TAB 5: AI CONVERSATION PARTNER (华语对话伙伴) -->
+    <!-- ========================================== -->
+    <div id="view-partner" class="tab-content hidden space-y-6">
+      
+      <!-- Top Control & Persona Bar -->
+      <div class="bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        
+        <!-- Persona Selector -->
+        <div>
+          <div class="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <i class="fa-solid fa-user-astronaut text-rose-500"></i>
+            <span>Choose Your AI Conversation Partner</span>
+          </div>
+          <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <button onclick="setPartnerPersona('teacher')" id="btn-persona-teacher" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-rose-600 text-white shadow-sm">
+              <span>👩‍🏫</span>
+              <span>王老师 (Ms. Wang)</span>
+            </button>
+            <button onclick="setPartnerPersona('classmate')" id="btn-persona-classmate" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+              <span>🧑‍🎓</span>
+              <span>小李 (Classmate)</span>
+            </button>
+            <button onclick="setPartnerPersona('clerk')" id="btn-persona-clerk" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+              <span>🏪</span>
+              <span>售货员 (Shop Clerk)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Utility Controls: Status, Auto-Speak & Settings -->
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+          
+          <!-- AI Engine Status Badge & Parent Settings Modal Trigger -->
+          <button onclick="openPartnerSettingsModal()" id="partner-status-btn" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-xs font-bold flex items-center gap-2 transition" title="Parent / API Configuration Settings">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="ai-status-dot"></span>
+            <span id="ai-status-label" class="text-slate-700 dark:text-slate-300">Gemini AI Active</span>
+            <i class="fa-solid fa-gear text-slate-400 text-[11px]"></i>
+          </button>
+
+          <!-- Auto-speak Audio Toggle -->
+          <button onclick="togglePartnerAutoSpeak()" id="partner-autospeak-btn" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 text-xs font-bold flex items-center gap-1.5 transition" title="Automatically Speak Responses">
+            <i class="fa-solid fa-volume-high text-rose-500" id="partner-autospeak-icon"></i>
+            <span id="partner-autospeak-label">Auto-Speak On</span>
+          </button>
+
+          <!-- Clear / Reset Chat -->
+          <button onclick="resetPartnerConversation()" class="p-2 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition" title="Reset Conversation">
+            <i class="fa-solid fa-rotate-right text-xs"></i>
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- Persona Goal & Prompt Context Strip -->
+      <div id="partner-context-strip" class="bg-rose-50/70 dark:bg-slate-900/90 border border-rose-200/80 dark:border-rose-900/40 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div class="space-y-0.5">
+          <div class="font-extrabold text-rose-900 dark:text-rose-300 flex items-center gap-2" id="persona-title-label">
+            <span>👩‍🏫 Ms. Wang • ILS Oral Exam Rehearsal Coach</span>
+          </div>
+          <p class="text-slate-600 dark:text-slate-400" id="persona-desc-label">
+            Bilingual Coach Mode: Speak/type in Chinese or English. The AI understands English, coaches you, and code-switches seamlessly to help you master Unit 1 oral exam topics!
+          </p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-[11px] font-bold text-slate-500">Mode:</span>
+          <span class="px-2 py-0.5 rounded-full bg-rose-200/60 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 font-mono font-bold text-[11px]">Bilingual Coach (中/EN)</span>
+        </div>
+      </div>
+
+      <!-- Real-Time AI Key Status Indicator Banner -->
+      <div id="partner-key-status-banner" class="rounded-2xl p-3.5 sm:p-4 border transition-all text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <!-- Rendered dynamically via updateAIStatusUI() -->
+      </div>
+
+      <!-- Main Conversation Feed Arena -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-6 shadow-sm space-y-4">
+        
+        <!-- Messages Scroll Container -->
+        <div id="partner-chat-feed" class="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+          <!-- Dynamic Chat Messages rendered via JS -->
+        </div>
+
+        <!-- AI Generating Indicator (Hidden by default) -->
+        <div id="partner-ai-typing" class="hidden flex items-center gap-2 text-xs text-rose-600 dark:text-rose-400 font-semibold py-2 px-3 bg-rose-50 dark:bg-rose-950/40 rounded-xl w-fit border border-rose-200 dark:border-rose-900/50">
+          <i class="fa-solid fa-circle-notch fa-spin"></i>
+          <span id="partner-ai-typing-text">Partner is thinking... (正在思考)</span>
+        </div>
+
+        <!-- Clickable Starter Suggestion Chips (Scaffolding) -->
+        <div class="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
+          <div class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+            <span>Clickable Starters & English Coaching Prompts:</span>
+            <span class="text-[10px] text-slate-400">Unit 1 & Scaffolding</span>
+          </div>
+          <div id="partner-starter-chips" class="flex flex-wrap gap-2 text-xs">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- Input Bar with Speech-to-Text Microphone & Text Send -->
+        <div class="pt-2">
+          <div class="flex items-center gap-2 p-2 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800">
+            
+            <!-- Voice Input Microphone Button -->
+            <button onclick="togglePartnerVoiceRecording()" id="partner-mic-btn" class="w-11 h-11 rounded-xl bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center transition shadow font-bold text-sm shrink-0" title="Click to Speak (Voice-to-Text)">
+              <i class="fa-solid fa-microphone" id="partner-mic-icon"></i>
+            </button>
+
+            <!-- Mic Language Switcher: ZH / EN -->
+            <button onclick="togglePartnerMicLanguage()" id="partner-mic-lang-btn" class="h-11 px-2.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition shrink-0 shadow-xs" title="Switch voice input language: Mandarin (zh-CN) vs English (en-US)">
+              <span id="partner-mic-lang-flag">🇨🇳</span>
+              <span id="partner-mic-lang-label" class="font-mono text-[11px]">ZH</span>
+            </button>
+
+            <!-- Text Input Field -->
+            <input type="text" id="partner-input-text" onkeydown="handlePartnerInputKeydown(event)" placeholder="Type or speak in Chinese or English... (Ask for help or practice!)" class="flex-1 bg-transparent border-0 px-3 py-2 text-sm sm:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none">
+
+            <!-- Send Button -->
+            <button onclick="sendPartnerMessage()" id="partner-send-btn" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm shrink-0">
+              <span>Send</span>
+              <i class="fa-solid fa-paper-plane text-[10px]"></i>
+            </button>
+
+          </div>
+
+          <!-- Speech-to-text status helper -->
+          <div class="flex items-center justify-between px-2 pt-1.5 text-[11px] text-slate-400">
+            <span id="partner-mic-hint">Bilingual Support: Type or speak in English or Chinese. The AI will coach and code-switch as needed!</span>
+            <span class="font-mono">Press Enter ↵</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Parent / API Configuration Modal Dialog -->
+    <div id="partner-settings-modal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+        
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold">
+              <i class="fa-solid fa-key"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">AI Engine & API Key Setup</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Configure Gemini AI for Connor's Conversation Partner</p>
+            </div>
+          </div>
+          <button onclick="closePartnerSettingsModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-base">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="space-y-4 text-xs">
+          
+          <!-- Current Live Key Status Card in Modal -->
+          <div id="modal-key-status-card" class="p-3.5 rounded-2xl border text-xs transition">
+            <!-- Injected via updateAIStatusUI() -->
+          </div>
+
+          <!-- Method 1: config.js Explanation -->
+          <div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 space-y-1 text-slate-800 dark:text-slate-200">
+            <div class="font-extrabold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-shield-halved"></i> Zero-Friction Setup via config.js
+            </div>
+            <p class="leading-relaxed">
+              To load your API key automatically so Connor <em>never</em> has to enter it, simply copy <code class="mono font-bold bg-amber-100 dark:bg-amber-900/60 px-1 rounded">config.example.js</code> to <code class="mono font-bold bg-amber-100 dark:bg-amber-900/60 px-1 rounded">config.js</code> in this project folder and paste your key. It is git-ignored and automatically detected!
+            </p>
+          </div>
+
+          <!-- Method 2: In-browser key storage -->
+          <div class="space-y-2">
+            <label for="gemini-api-key-input" class="font-bold text-slate-700 dark:text-slate-300">
+              Or Paste Google Gemini API Key in Browser (Saved in localStorage):
+            </label>
+            <input type="password" id="gemini-api-key-input" placeholder="AIzaSy..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:border-rose-500">
+            <p class="text-[11px] text-slate-500">
+              Get a free API key at <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-rose-600 dark:text-rose-400 underline font-bold">Google AI Studio</a>.
+            </p>
+          </div>
+
+          <!-- Model selection -->
+          <div class="space-y-2">
+            <label for="gemini-model-select" class="font-bold text-slate-700 dark:text-slate-300">Gemini Model:</label>
+            <select id="gemini-model-select" class="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-bold">
+              <option value="gemini-3.8-flash">Gemini 3.8 Flash (Active Model & Recommended)</option>
+              <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+              <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+            </select>
+          </div>
+
+          <!-- Test / Save Button -->
+          <div class="pt-2 flex items-center justify-between gap-3">
+            <button onclick="clearSavedPartnerKey()" class="px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold transition">
+              Remove Saved Key
+            </button>
+            <div class="flex items-center gap-2">
+              <button onclick="testAndSavePartnerKey()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5">
+                <i class="fa-solid fa-check"></i>
+                <span>Save & Connect</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="partner-key-test-feedback" class="text-center font-bold text-[11px] min-h-[18px]"></div>
+
+        </div>
+
+      </div>
+    </div>
+
   </main>
 
   <!-- Global Footer -->
@@ -975,6 +1198,7 @@
       renderTeacherQuestions();
       renderFlashcard(0);
       updateMasteryStats();
+      updateAIStatusUI();
     }
 
     function loadStorage() {
@@ -1056,7 +1280,7 @@
     // Switch View Tabs
     function switchTab(tabId) {
       stopAllAudio();
-      const tabs = ['studio', 'flashcards', 'mock', 'audio'];
+      const tabs = ['studio', 'flashcards', 'mock', 'audio', 'partner'];
       tabs.forEach(t => {
         const view = document.getElementById(`view-${t}`);
         const btn = document.getElementById(`tab-${t}`);
@@ -1069,6 +1293,12 @@
         }
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (tabId === 'partner') {
+        updateAIStatusUI();
+        if (partnerChatHistory.length === 0) {
+          initPartnerChat();
+        }
+      }
     }
 
     // ==========================================
@@ -1842,6 +2072,1055 @@
       URL.revokeObjectURL(url);
     }
 
+    // ==========================================
+    // AI CONVERSATION PARTNER (华语对话伙伴) ENGINE
+    // ==========================================
+    let partnerChatHistory = [];
+    let currentPartnerPersona = 'teacher'; // 'teacher', 'classmate', 'clerk'
+    let partnerAutoSpeak = true;
+    let partnerSpeechRecognition = null;
+    let isPartnerRecording = false;
+
+    const PERSONA_CONFIGS = {
+      teacher: {
+        name: "王老师 (Ms. Wang)",
+        role: "新加坡美国学校 (SAS) 华语老师",
+        avatar: "👩‍🏫",
+        title: "👩‍🏫 Ms. Wang • ILS Oral Exam Rehearsal Coach",
+        desc: "Bilingual Coaching & Oral Exam Rehearsal: Practice Unit 1 topics. Ms. Wang coaches in English, breaks down vocab/grammar, and codeswitches seamlessly into Chinese practice!",
+        starters: [
+          "在新加坡，我最常常去乌节路的商场购物。",
+          "母亲节我想给妈妈买一条高质量的丝巾。",
+          "我觉得衣服的质量比款式更重要，因为耐穿。",
+          "How do I compare two shopping malls using '比'?",
+          "What is the difference between 质量 and 款式?",
+          "I'm not sure how to start, can you give me an example?"
+        ],
+        initial: {
+          hanzi: "你好，Connor！我是王老师。Our ILS oral exam is coming up soon, so let's rehearse Unit 1: School Life & Shopping (学习与购物). Feel free to answer in Chinese, mix in English, or ask me questions in English whenever you need coaching! 在这个周末，你常常去哪里购物？为什么？",
+          pinyin: "Nǐ hǎo, Connor! Wǒ shì Wáng Lǎoshī. ... Zài zhège zhōumò, nǐ chángcháng qù nǎlǐ gòuwù? Wèishénme?",
+          english: "Hello, Connor! I am Ms. Wang. ... On weekends, where do you often go shopping? Why?",
+          feedback: "Bilingual Mode: You can answer in Chinese, ask questions in English, or code-switch naturally!"
+        }
+      },
+      classmate: {
+        name: "小李 (Xiao Li)",
+        role: "SAS 9年级同班同学",
+        avatar: "🧑‍🎓",
+        title: "🧑‍🎓 Xiao Li • Friendly Peer Chat & Scaffolding",
+        desc: "Casual conversation with classmate Xiao Li. Chat about weekend plans, Takashimaya, or ask Xiao Li in English how to say cool phrases in Chinese.",
+        starters: [
+          "听说乌节路新开了商场，我们要不要周末一起去？",
+          "我想买一件舒服的外套，但是价格不能太贵。",
+          "逛完商场以后，我们还可以一起去喝珍珠奶茶！",
+          "How do I say 'Let's take the red line MRT' in Chinese?",
+          "What are some good mall shops to mention for our oral exam?"
+        ],
+        initial: {
+          hanzi: "嗨，Connor！我是小李。听说乌节路的高岛屋(Takashimaya)最近有很多新衣服！Feel free to chat in Chinese, or ask me in English if you want help with cool phrases. 周末要不要一起去逛逛？你平时最喜欢买什么？",
+          pinyin: "Hāi, Connor! Wǒ shì Xiǎo Lǐ. ... Zhōumò yào bu yào yìqǐ qù guàngguang? Nǐ píngshí zuì xǐhuan mǎi shénme?",
+          english: "Hey Connor! I'm Xiao Li. ... Want to go hang out this weekend? What do you usually like to buy?",
+          feedback: "Peer Scaffolding: Ask Xiao Li for vocabulary tips in English or practice student life Chinese!"
+        }
+      },
+      clerk: {
+        name: "商场售货员 (Sales Clerk)",
+        role: "乌节路服装精品店店员",
+        avatar: "🏪",
+        title: "🏪 Sales Clerk • Singapore Shopping Roleplay",
+        desc: "Practice realistic shopping dialogue in Chinese: asking about fabric, sizes, comparing styles, and negotiating discounts (打折). Ask questions in English anytime!",
+        starters: [
+          "请问这条丝巾有什么颜色？我想送给妈妈当礼物。",
+          "这件衣服虽然很漂亮，但是价格有点贵，可以打折吗？",
+          "我想找一双既舒服又适合上班穿的皮鞋。",
+          "How do I ask if there is a discount for Mother's Day?",
+          "How do I ask if I can try this on in the fitting room?"
+        ],
+        initial: {
+          hanzi: "您好！欢迎光临乌节精品店！Today our 100% pure silk scarves (真丝丝巾) and casual jackets are on promotion. 您想买点什么？If you need vocabulary help or want to practice bargaining, just ask in Chinese or English!",
+          pinyin: "Nín hǎo! Huānyíng guānglín Wūjié Jīngpǐndiàn! ... Nín xiǎng mǎi diǎn shénme?",
+          english: "Hello! Welcome to Orchard Boutique! ... What are you looking for today?",
+          feedback: "Shopping Roleplay: Practice asking prices, fabrics, and discounts (打折). Ask for help in English anytime!"
+        }
+      }
+    };
+
+    const TARGET_STRUCTURE_RULES = [
+      { name: "虽然…但是…", regex: /虽然.*但是|虽然.*但/ },
+      { name: "不但…而且…", regex: /不但.*而且|不但.*还/ },
+      { name: "只要…就…", regex: /只要.*就/ },
+      { name: "一…就…", regex: /一.*就/ },
+      { name: "比 (比较)", regex: /比.*更|比.*好|比.*贵|比.*大/ },
+      { name: "为…提供…", regex: /为.*提供/ },
+      { name: "无论…都…", regex: /无论.*都/ },
+      { name: "又…又…", regex: /又.*又/ },
+      { name: "除了…以外…", regex: /除了.*以外|除了/ }
+    ];
+
+    function maskApiKey(key) {
+      if (!key) return '';
+      if (key.length <= 10) return '••••••••';
+      return key.slice(0, 6) + '••••••••' + key.slice(-4);
+    }
+
+    function getKeyStatusDetails() {
+      // 1. Check window.GEMINI_API_KEY from config.js or ../config.js
+      const hasConfigKey = typeof window !== 'undefined' && 
+                           window.GEMINI_API_KEY && 
+                           typeof window.GEMINI_API_KEY === 'string' &&
+                           window.GEMINI_API_KEY.trim() !== '' && 
+                           window.GEMINI_API_KEY.trim() !== "YOUR_GEMINI_API_KEY_HERE";
+      
+      const configKey = hasConfigKey ? window.GEMINI_API_KEY.trim() : '';
+
+      // 2. Check localStorage
+      let localKey = '';
+      try {
+        localKey = (localStorage.getItem('connor_gemini_api_key') || '').trim();
+        if (localKey === "YOUR_GEMINI_API_KEY_HERE") localKey = '';
+      } catch (e) {}
+
+      const activeModel = getResolvedGeminiModel();
+
+      if (configKey) {
+        return {
+          isLoaded: true,
+          source: 'config.js',
+          sourceLabel: 'config.js',
+          key: configKey,
+          maskedKey: maskApiKey(configKey),
+          buttonLabel: 'Key Loaded (config.js)',
+          model: activeModel
+        };
+      } else if (localKey) {
+        return {
+          isLoaded: true,
+          source: 'browser',
+          sourceLabel: 'Browser Storage',
+          key: localKey,
+          maskedKey: maskApiKey(localKey),
+          buttonLabel: 'Key Loaded (Browser)',
+          model: activeModel
+        };
+      } else {
+        return {
+          isLoaded: false,
+          source: 'none',
+          sourceLabel: 'None',
+          key: '',
+          maskedKey: 'None',
+          buttonLabel: 'No Key Loaded (Offline)',
+          model: activeModel
+        };
+      }
+    }
+
+    function getResolvedGeminiKey() {
+      return getKeyStatusDetails().key;
+    }
+
+    function getResolvedGeminiModel() {
+      const saved = localStorage.getItem('connor_gemini_model');
+      if (!saved || saved === 'gemini-2.5-flash') return 'gemini-3.8-flash';
+      return saved;
+    }
+
+    function updateAIStatusUI() {
+      const status = getKeyStatusDetails();
+
+      // 1. Tab 5 Status Button & Dot
+      const dot = document.getElementById('ai-status-dot');
+      const label = document.getElementById('ai-status-label');
+      const btn = document.getElementById('partner-status-btn');
+
+      if (status.isLoaded) {
+        if (dot) dot.className = "inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+        if (label) label.innerText = status.buttonLabel;
+        if (btn) {
+          btn.className = "px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-800 text-xs font-bold flex items-center gap-2 transition text-emerald-800 dark:text-emerald-300 shadow-sm";
+          btn.title = `API Key Loaded via ${status.sourceLabel} • Click for settings`;
+        }
+      } else {
+        if (dot) dot.className = "inline-block w-2.5 h-2.5 rounded-full bg-amber-500";
+        if (label) label.innerText = status.buttonLabel;
+        if (btn) {
+          btn.className = "px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/40 border border-amber-300 dark:border-amber-800 text-xs font-bold flex items-center gap-2 transition text-amber-800 dark:text-amber-300 shadow-sm";
+          btn.title = "No API Key Loaded • Click to setup Gemini key or use offline mode";
+        }
+      }
+
+      // 2. Tab 5 Prominent Status Banner
+      const banner = document.getElementById('partner-key-status-banner');
+      if (banner) {
+        if (status.isLoaded) {
+          banner.className = "rounded-2xl p-3.5 sm:p-4 border transition-all text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/60";
+          banner.innerHTML = `
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 text-base font-bold">
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
+              <div class="space-y-0.5">
+                <div class="font-extrabold text-emerald-950 dark:text-emerald-200 flex flex-wrap items-center gap-2">
+                  <span class="text-sm">API Key Loaded</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200/80 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
+                    <i class="fa-solid fa-bolt mr-1"></i>Active: ${status.sourceLabel}
+                  </span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    ${status.model}
+                  </span>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 text-xs">
+                  Live Gemini AI is connected and ready for interactive Chinese practice (<span class="font-mono font-bold text-slate-700 dark:text-slate-300">${status.maskedKey}</span>).
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+              <button onclick="openPartnerSettingsModal()" class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 font-bold text-xs flex items-center gap-1.5 transition shadow-sm">
+                <i class="fa-solid fa-sliders text-emerald-600 dark:text-emerald-400"></i>
+                <span>API Settings</span>
+              </button>
+            </div>
+          `;
+        } else {
+          banner.className = "rounded-2xl p-3.5 sm:p-4 border transition-all text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm bg-amber-50/80 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800/60";
+          banner.innerHTML = `
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 text-base font-bold">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <div class="space-y-0.5">
+                <div class="font-extrabold text-amber-950 dark:text-amber-200 flex flex-wrap items-center gap-2">
+                  <span class="text-sm">No API Key Loaded</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200/80 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700">
+                    Offline Scenario Mode
+                  </span>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 text-xs">
+                  Connor can still practice using built-in oral exam scenarios, or you can add a key to <code class="mono font-bold bg-amber-100 dark:bg-amber-900/50 px-1 py-0.5 rounded text-amber-900 dark:text-amber-200">config.js</code> for live AI generation.
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+              <button onclick="openPartnerSettingsModal()" class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+                <i class="fa-solid fa-key"></i>
+                <span>Load API Key</span>
+              </button>
+            </div>
+          `;
+        }
+      }
+
+      // 3. Modal Key Status Card
+      const modalStatusCard = document.getElementById('modal-key-status-card');
+      if (modalStatusCard) {
+        if (status.isLoaded) {
+          modalStatusCard.className = "p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800/60 space-y-1.5";
+          modalStatusCard.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="font-extrabold text-emerald-950 dark:text-emerald-200 text-xs sm:text-sm">Status: API Key Loaded & Active</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-200/80 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-200">
+                ${status.source}
+              </span>
+            </div>
+            <div class="text-[11px] text-slate-700 dark:text-slate-300 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>Source: <strong>${status.sourceLabel}</strong></span>
+              <span>Key: <code class="font-mono font-bold text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-emerald-300/60 dark:border-emerald-800">${status.maskedKey}</code></span>
+            </div>
+            <p class="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
+              ✓ Ready for live practice. Conversation prompts are processed through Google Gemini model <span class="font-mono font-bold">${status.model}</span>.
+            </p>
+          `;
+        } else {
+          modalStatusCard.className = "p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/60 space-y-1.5";
+          modalStatusCard.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <span class="font-extrabold text-amber-950 dark:text-amber-200 text-xs sm:text-sm">Status: No API Key Loaded</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-200/80 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200">
+                Offline Mode
+              </span>
+            </div>
+            <p class="text-[11px] text-amber-800 dark:text-amber-300">
+              No API key was detected in <code>config.js</code> or browser storage. Connor is currently using offline scripted conversations. To enable real-time AI, paste your key below or create <code>config.js</code>.
+            </p>
+          `;
+        }
+      }
+    }
+
+    function initPartnerChat() {
+      updateAIStatusUI();
+      const config = PERSONA_CONFIGS[currentPartnerPersona];
+      partnerChatHistory = [{
+        id: Date.now(),
+        role: 'assistant',
+        hanzi: config.initial.hanzi,
+        pinyin: config.initial.pinyin,
+        english: config.initial.english,
+        feedback: config.initial.feedback,
+        avatar: config.avatar,
+        speakerName: config.name
+      }];
+      renderPartnerChatFeed();
+      renderPartnerStarterChips();
+    }
+
+    function setPartnerPersona(persona) {
+      if (currentPartnerPersona === persona && partnerChatHistory.length > 0) return;
+      currentPartnerPersona = persona;
+
+      ['teacher', 'classmate', 'clerk'].forEach(p => {
+        const btn = document.getElementById(`btn-persona-${p}`);
+        if (btn) {
+          if (p === persona) {
+            btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-rose-600 text-white shadow-sm";
+          } else {
+            btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
+          }
+        }
+      });
+
+      const cfg = PERSONA_CONFIGS[persona];
+      document.getElementById('persona-title-label').innerHTML = `<span>${cfg.title}</span>`;
+      document.getElementById('persona-desc-label').innerText = cfg.desc;
+
+      initPartnerChat();
+    }
+
+    function resetPartnerConversation() {
+      initPartnerChat();
+    }
+
+    function togglePartnerAutoSpeak() {
+      partnerAutoSpeak = !partnerAutoSpeak;
+      const btn = document.getElementById('partner-autospeak-btn');
+      const icon = document.getElementById('partner-autospeak-icon');
+      const label = document.getElementById('partner-autospeak-label');
+      if (partnerAutoSpeak) {
+        icon.className = "fa-solid fa-volume-high text-rose-500";
+        label.innerText = "Auto-Speak On";
+      } else {
+        icon.className = "fa-solid fa-volume-xmark text-slate-400";
+        label.innerText = "Auto-Speak Off";
+      }
+    }
+
+    function detectTargetStructures(text) {
+      const matches = [];
+      TARGET_STRUCTURE_RULES.forEach(rule => {
+        if (rule.regex.test(text)) {
+          matches.push(rule.name);
+        }
+      });
+      return matches;
+    }
+
+    function renderPartnerChatFeed() {
+      const feed = document.getElementById('partner-chat-feed');
+      if (!feed) return;
+      feed.innerHTML = '';
+
+      partnerChatHistory.forEach(msg => {
+        const msgEl = document.createElement('div');
+        const isUser = msg.role === 'user';
+
+        if (isUser) {
+          // Connor's Message
+          const badgeHtml = (msg.structuresUsed && msg.structuresUsed.length > 0)
+            ? `<div class="flex flex-wrap gap-1 mt-1.5 justify-end">
+                ${msg.structuresUsed.map(s => `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1"><i class="fa-solid fa-award text-amber-500"></i> ${s}</span>`).join('')}
+              </div>`
+            : '';
+
+          msgEl.className = "flex justify-end items-start gap-2.5";
+          msgEl.innerHTML = `
+            <div class="max-w-[85%] sm:max-w-[75%] space-y-1">
+              <div class="bg-rose-600 text-white p-3.5 sm:p-4 rounded-3xl rounded-tr-md shadow-sm space-y-1">
+                <div class="text-[11px] font-mono text-rose-200 uppercase tracking-wider flex items-center justify-between gap-3">
+                  <span>Connor (康纳)</span>
+                  <button onclick="speakPartnerText('${escapeAttr(msg.hanzi)}')" class="hover:text-white transition" title="Listen to your speech">
+                    <i class="fa-solid fa-volume-high text-xs"></i>
+                  </button>
+                </div>
+                <div class="chinese-font text-base sm:text-lg font-bold leading-relaxed">${msg.hanzi}</div>
+                ${msg.pinyin ? `<div class="pinyin-text font-mono text-xs text-rose-200 font-medium">${msg.pinyin}</div>` : ''}
+              </div>
+              ${badgeHtml}
+            </div>
+            <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-xs shrink-0 text-slate-700 dark:text-slate-300">
+              CK
+            </div>
+          `;
+        } else {
+          // AI Partner's Message
+          msgEl.className = "flex justify-start items-start gap-2.5";
+          msgEl.innerHTML = `
+            <div class="w-9 h-9 rounded-2xl bg-rose-100 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-900/50 flex items-center justify-center text-lg shrink-0 shadow-sm">
+              ${msg.avatar || '👩‍🏫'}
+            </div>
+            <div class="max-w-[85%] sm:max-w-[75%] space-y-2">
+              <div class="bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 p-3.5 sm:p-4 rounded-3xl rounded-tl-md shadow-sm space-y-1.5">
+                <div class="flex items-center justify-between text-[11px] font-bold text-rose-600 dark:text-rose-400">
+                  <span>${msg.speakerName || 'AI Partner'}</span>
+                  <div class="flex items-center gap-2">
+                    <button onclick="speakPartnerText('${escapeAttr(msg.hanzi)}')" class="hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1 text-slate-500 dark:text-slate-400" title="Replay spoken audio">
+                      <i class="fa-solid fa-volume-high"></i>
+                      <span class="text-[10px]">Listen</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="chinese-font text-base sm:text-lg font-extrabold text-slate-900 dark:text-white leading-relaxed">
+                  ${msg.hanzi}
+                </div>
+                ${msg.pinyin ? `<div class="pinyin-text text-xs sm:text-sm font-mono text-rose-600 dark:text-rose-300 font-medium">${msg.pinyin}</div>` : ''}
+                ${msg.english ? `<div class="trans-text text-xs text-slate-500 dark:text-slate-400 italic pt-0.5 border-t border-slate-200/60 dark:border-slate-700/60">${msg.english}</div>` : ''}
+              </div>
+
+              ${msg.feedback ? `
+                <div class="bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 px-3 py-1.5 rounded-2xl text-[11px] text-amber-900 dark:text-amber-300 flex items-start gap-1.5">
+                  <i class="fa-solid fa-lightbulb text-amber-500 mt-0.5"></i>
+                  <span><strong>Coach Note:</strong> ${msg.feedback}</span>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }
+
+        feed.appendChild(msgEl);
+      });
+
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function escapeAttr(str) {
+      if (!str) return '';
+      return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function splitBilingual(text) {
+      if (!text) return [];
+      const segments = [];
+      let currentZh = null;
+      let currentStr = "";
+      
+      for (const char of text) {
+        const isZh = /[\u4e00-\u9fa5]/.test(char);
+        const isNeutral = /^[\s\d\.,\?!'"\(\):;\-–—/，。？！、“”：；、…]+$/.test(char);
+        
+        if (isNeutral) {
+          currentStr += char;
+        } else if (isZh) {
+          if (currentZh === false && currentStr.trim()) {
+            segments.push({ text: currentStr.trim(), lang: "en-US" });
+            currentStr = "";
+          }
+          currentZh = true;
+          currentStr += char;
+        } else {
+          if (currentZh === true && currentStr.trim()) {
+            segments.push({ text: currentStr.trim(), lang: "zh-CN" });
+            currentStr = "";
+          }
+          currentZh = false;
+          currentStr += char;
+        }
+      }
+      if (currentStr.trim()) {
+        segments.push({ text: currentStr.trim(), lang: currentZh ? "zh-CN" : "en-US" });
+      }
+      return segments;
+    }
+
+    function getBestVoiceForLang(lang) {
+      if (!('speechSynthesis' in window)) return null;
+      const allVoices = window.speechSynthesis.getVoices();
+      if (!allVoices || allVoices.length === 0) return null;
+
+      if (lang.startsWith('zh')) {
+        if (selectedVoice && selectedVoice.lang && selectedVoice.lang.toLowerCase().startsWith('zh')) {
+          return selectedVoice;
+        }
+        return allVoices.find(v => v.lang.toLowerCase().startsWith('zh-cn')) ||
+               allVoices.find(v => v.lang.toLowerCase().startsWith('zh')) || null;
+      } else {
+        return allVoices.find(v => (v.name.includes("Samantha") || v.name.includes("Daniel") || v.name.includes("Google US English") || v.name.includes("Natural")) && v.lang.toLowerCase().startsWith('en')) ||
+               allVoices.find(v => v.lang.toLowerCase().startsWith('en-us')) ||
+               allVoices.find(v => v.lang.toLowerCase().startsWith('en')) || null;
+      }
+    }
+
+    function speakBilingualText(text) {
+      if (!('speechSynthesis' in window) || !text) return;
+      stopAllAudio();
+
+      const segments = splitBilingual(text);
+      if (segments.length === 0) return;
+
+      segments.forEach(seg => {
+        const utter = new SpeechSynthesisUtterance(seg.text);
+        utter.rate = ttsRate;
+        utter.pitch = 1.05;
+        utter.lang = seg.lang;
+        const voice = getBestVoiceForLang(seg.lang);
+        if (voice) utter.voice = voice;
+        window.speechSynthesis.speak(utter);
+      });
+    }
+
+    function speakPartnerText(text) {
+      if (!text) return;
+      speakBilingualText(text);
+    }
+
+    function renderPartnerStarterChips() {
+      const container = document.getElementById('partner-starter-chips');
+      if (!container) return;
+      container.innerHTML = '';
+      const starters = PERSONA_CONFIGS[currentPartnerPersona].starters;
+
+      starters.forEach(s => {
+        const chip = document.createElement('button');
+        chip.className = "px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-950/40 text-slate-700 hover:text-rose-700 dark:text-slate-300 dark:hover:text-rose-300 border border-slate-200 dark:border-slate-700 hover:border-rose-300 transition text-left text-[11px] font-medium";
+        chip.innerText = s;
+        chip.onclick = () => {
+          const input = document.getElementById('partner-input-text');
+          input.value = s;
+          input.focus();
+        };
+        container.appendChild(chip);
+      });
+    }
+
+    function handlePartnerInputKeydown(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendPartnerMessage();
+      }
+    }
+
+    // Voice Input: Language Selector (Mandarin / English)
+    let partnerMicLang = 'zh-CN';
+
+    function togglePartnerMicLanguage() {
+      partnerMicLang = partnerMicLang === 'zh-CN' ? 'en-US' : 'zh-CN';
+      const flag = document.getElementById('partner-mic-lang-flag');
+      const label = document.getElementById('partner-mic-lang-label');
+      const hint = document.getElementById('partner-mic-hint');
+      const btn = document.getElementById('partner-mic-lang-btn');
+      
+      if (partnerMicLang === 'zh-CN') {
+        if (flag) flag.innerText = '🇨🇳';
+        if (label) label.innerText = 'ZH';
+        if (btn) btn.title = "Voice Input: Mandarin (zh-CN). Click to switch to English.";
+        if (hint) hint.innerText = "Mic mode: Mandarin Chinese (Speak in Chinese to practice).";
+      } else {
+        if (flag) flag.innerText = '🇺🇸';
+        if (label) label.innerText = 'EN';
+        if (btn) btn.title = "Voice Input: English (en-US). Click to switch to Mandarin.";
+        if (hint) hint.innerText = "Mic mode: English (Ask questions or get coaching in English).";
+      }
+    }
+
+    // Speech-to-Text via Web Speech API
+    function togglePartnerVoiceRecording() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) {
+        alert("Your browser does not support Web Speech Recognition. Please type in Chinese or English, or use Google Chrome / Safari.");
+        return;
+      }
+
+      const micBtn = document.getElementById('partner-mic-btn');
+      const micIcon = document.getElementById('partner-mic-icon');
+      const hint = document.getElementById('partner-mic-hint');
+
+      if (!isPartnerRecording) {
+        partnerSpeechRecognition = new SpeechRec();
+        partnerSpeechRecognition.lang = partnerMicLang;
+        partnerSpeechRecognition.interimResults = true;
+        partnerSpeechRecognition.continuous = false;
+
+        partnerSpeechRecognition.onstart = () => {
+          isPartnerRecording = true;
+          micBtn.className = "w-11 h-11 rounded-xl bg-rose-600 text-white flex items-center justify-center transition shadow font-bold text-sm shrink-0 pulse-ring";
+          micIcon.className = "fa-solid fa-microphone-lines text-base animate-pulse";
+          if (partnerMicLang === 'zh-CN') {
+            hint.innerText = "Listening in Chinese (正在倾听)... Speak your Chinese sentence.";
+          } else {
+            hint.innerText = "Listening in English (Listening)... Speak your question or thoughts.";
+          }
+          hint.className = "text-rose-600 dark:text-rose-400 font-bold";
+        };
+
+        partnerSpeechRecognition.onresult = (event) => {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          document.getElementById('partner-input-text').value = transcript;
+        };
+
+        partnerSpeechRecognition.onerror = (event) => {
+          console.warn("Speech Recognition error:", event.error);
+          stopPartnerVoiceRecording();
+          hint.innerText = "Microphone stopped: " + event.error;
+          hint.className = "text-slate-400";
+        };
+
+        partnerSpeechRecognition.onend = () => {
+          stopPartnerVoiceRecording();
+          hint.innerText = "Speech transcribed! Tap Send or edit above.";
+          hint.className = "text-emerald-600 dark:text-emerald-400 font-bold";
+        };
+
+        partnerSpeechRecognition.start();
+
+      } else {
+        stopPartnerVoiceRecording();
+      }
+    }
+
+    function stopPartnerVoiceRecording() {
+      if (partnerSpeechRecognition) {
+        try { partnerSpeechRecognition.stop(); } catch (e) {}
+        partnerSpeechRecognition = null;
+      }
+      isPartnerRecording = false;
+      const micBtn = document.getElementById('partner-mic-btn');
+      const micIcon = document.getElementById('partner-mic-icon');
+      if (micBtn) micBtn.className = "w-11 h-11 rounded-xl bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center transition shadow font-bold text-sm shrink-0";
+      if (micIcon) micIcon.className = "fa-solid fa-microphone";
+    }
+
+    // Sending message & handling AI generation
+    async function sendPartnerMessage() {
+      const input = document.getElementById('partner-input-text');
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+      stopPartnerVoiceRecording();
+
+      // Check structure usage
+      const structures = detectTargetStructures(text);
+
+      // Add user message to history
+      partnerChatHistory.push({
+        id: Date.now(),
+        role: 'user',
+        hanzi: text,
+        structuresUsed: structures
+      });
+
+      renderPartnerChatFeed();
+
+      // Trigger AI typing
+      const typingIndicator = document.getElementById('partner-ai-typing');
+      typingIndicator.classList.remove('hidden');
+
+      const partnerConfig = PERSONA_CONFIGS[currentPartnerPersona];
+
+      try {
+        const apiKey = getResolvedGeminiKey();
+        let aiResponse = null;
+
+        if (apiKey) {
+          aiResponse = await callGeminiPartnerAPI(text, partnerConfig);
+        } else {
+          // Offline intelligent fallback scenario
+          aiResponse = generateOfflineScenarioResponse(text, partnerConfig);
+        }
+
+        typingIndicator.classList.add('hidden');
+
+        partnerChatHistory.push({
+          id: Date.now() + 1,
+          role: 'assistant',
+          hanzi: aiResponse.hanzi,
+          pinyin: aiResponse.pinyin,
+          english: aiResponse.english,
+          feedback: aiResponse.feedback,
+          avatar: partnerConfig.avatar,
+          speakerName: partnerConfig.name
+        });
+
+        renderPartnerChatFeed();
+
+        // Auto-speak reply
+        if (partnerAutoSpeak) {
+          speakPartnerText(aiResponse.hanzi);
+        }
+
+      } catch (err) {
+        console.warn("AI generation note, using fallback:", err);
+        typingIndicator.classList.add('hidden');
+
+        // Graceful offline fallback
+        const fallback = generateOfflineScenarioResponse(text, partnerConfig);
+        partnerChatHistory.push({
+          id: Date.now() + 1,
+          role: 'assistant',
+          hanzi: fallback.hanzi,
+          pinyin: fallback.pinyin,
+          english: fallback.english,
+          feedback: "Generated using built-in Singapore SAS curriculum scenario engine.",
+          avatar: partnerConfig.avatar,
+          speakerName: partnerConfig.name
+        });
+
+        renderPartnerChatFeed();
+        if (partnerAutoSpeak) speakPartnerText(fallback.hanzi);
+      }
+    }
+
+    // Call Google Gemini REST API
+    async function callGeminiPartnerAPI(userText, partnerConfig) {
+      const apiKey = getResolvedGeminiKey();
+      const model = getResolvedGeminiModel();
+
+      const systemPrompt = `You are an encouraging, expert bilingual conversational partner and tutor for Connor Knuffke, a Grade 9 student at Singapore American School (SAS) enrolled in Chinese Intermediate II.
+
+Current Curriculum Theme: Unit 1 - School Life & Shopping (学习与购物).
+Target Grammar Structures: 虽然...但是..., 不但...而且..., 只要...就..., 一...就..., 比 (comparative), 为...提供..., 无论...都..., 又...又..., 除了...以外...
+Key Vocabulary: 乌节路, 商场, 丝巾, 衬衫, 鞋子, 礼物, 母亲节, 质量, 款式, 价格/价钱, 打折, 便宜, 心意, 方便, 适合.
+
+Persona: ${partnerConfig.name} - ${partnerConfig.role}.
+Goal: ${partnerConfig.desc}
+
+BILINGUAL COACHING & CODE-SWITCHING RULES:
+1. FULL ENGLISH COMPREHENSION & INTERPRETATION:
+   - Connor may type or speak in Chinese, in English, or a natural mix of both (code-switching).
+   - If Connor asks questions in English (e.g. "How do I say X in Chinese?", "What does 质量 mean?", "Can you explain why 虽然...但是... is used?", "I'm stuck, what should I say next?"), understand him completely and coach him directly!
+   - If Connor answers partially in English and partially in Chinese, validate his Chinese words and teach him the Chinese vocabulary for the English parts.
+
+2. FLUID BILINGUAL CODE-SWITCHING (MIXING ENGLISH AND CHINESE EVEN IN THE SAME RESPONSE):
+   - You can smoothly move back and forth between English and Chinese within the exact same response!
+   - For coaching notes, explanations, vocabulary definitions, and scaffolding tips, speak in clear, supportive English.
+   - Embed the target Chinese vocabulary, sentence patterns, and example oral responses in Chinese characters with pinyin and English translation so Connor can immediately practice saying them.
+   - For example:
+     "你可以说：'商场的衣服虽然很漂亮，但是价格有点贵。' (Although the clothes are pretty, the price is a bit high.) Notice how 虽然 and 但是 work together here! Now Connor, what else would you say about the quality?"
+   - When Connor speaks in Chinese, praise his effort, build on his ideas, and keep the dialogue flowing in Chinese while sprinkling in English tips or vocabulary scaffolding whenever helpful.
+
+3. CONVERSATIONAL FLOW & PACING:
+   - Keep your response conversational and encouraging (2-4 sentences).
+   - Always conclude with an inviting question or prompt in Chinese (or Chinese with an English hint) so Connor knows how to reply.
+
+4. STRICT JSON FORMAT:
+You MUST respond ONLY with a raw JSON object containing these 4 keys (do not wrap in markdown or code blocks, return pure JSON):
+{
+  "hanzi": "Your complete conversational response code-switching fluidly between English and Chinese characters. Always write any Chinese words using simplified Chinese characters (汉字), NEVER raw pinyin in this field.",
+  "pinyin": "Accurate pinyin with tone marks for all Chinese characters or phrases appearing in your response.",
+  "english": "English translation or breakdown of the Chinese sentences used in your response.",
+  "feedback": "1 concise, encouraging coach tip in English highlighting grammar structures (e.g. 虽然...但是, 比, 不但...而且), vocabulary tips, or oral exam rubric advice for SAS Intermediate II."
+}`;
+
+      const contents = [];
+      // Pass recent messages for context, starting with the first user turn to satisfy Gemini multi-turn role alternation
+      let recent = partnerChatHistory.slice(-8);
+      while (recent.length > 0 && recent[0].role !== 'user') {
+        recent.shift();
+      }
+      recent.forEach(m => {
+        if (m.role === 'user') {
+          contents.push({
+            role: 'user',
+            parts: [{ text: m.hanzi }]
+          });
+        } else {
+          contents.push({
+            role: 'model',
+            parts: [{
+              text: JSON.stringify({
+                hanzi: m.hanzi,
+                pinyin: m.pinyin || '',
+                english: m.english || '',
+                feedback: m.feedback || ''
+              })
+            }]
+          });
+        }
+      });
+
+      if (contents.length === 0) {
+        contents.push({
+          role: 'user',
+          parts: [{ text: userText }]
+        });
+      }
+
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: contents,
+          systemInstruction: {
+            parts: [{ text: systemPrompt }]
+          },
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+            responseMimeType: "application/json"
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("Gemini API Error details:", response.status, errText);
+        throw new Error(`Gemini API HTTP ${response.status}: ${errText}`);
+      }
+
+      const data = await response.json();
+      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      
+      return extractOrRepairJSON(rawText);
+    }
+
+    // Robust JSON Parser with graceful field-extraction fallback
+    function extractOrRepairJSON(raw) {
+      if (!raw) return { hanzi: "", pinyin: "", english: "", feedback: "Bilingual coaching active." };
+      let clean = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const firstBrace = clean.indexOf('{');
+      const lastBrace = clean.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        clean = clean.substring(firstBrace, lastBrace + 1);
+      }
+      try {
+        const parsed = JSON.parse(clean);
+        return {
+          hanzi: parsed.hanzi || raw,
+          pinyin: parsed.pinyin || "",
+          english: parsed.english || "",
+          feedback: parsed.feedback || "Bilingual coaching active."
+        };
+      } catch (e) {
+        // Regex extraction fallback for truncated or partially escaped JSON
+        const getField = (field) => {
+          const match = raw.match(new RegExp(`"${field}"\\s*:\\s*"([\\s\\S]*?)(?:"\\s*,|"\\s*\\}|$)`));
+          return match ? match[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').trim() : '';
+        };
+        const hanzi = getField('hanzi');
+        if (hanzi) {
+          return {
+            hanzi: hanzi,
+            pinyin: getField('pinyin'),
+            english: getField('english'),
+            feedback: getField('feedback') || "Bilingual coaching active."
+          };
+        }
+        const stripped = raw.replace(/```json|```|\{|\}|"hanzi":|"pinyin":|"english":|"feedback":/gi, '').trim();
+        return {
+          hanzi: stripped || raw,
+          pinyin: "",
+          english: "",
+          feedback: "Bilingual coaching active."
+        };
+      }
+    }
+
+    // Offline Smart Scenario Fallback Engine (Bilingual Coaching Support)
+    function generateOfflineScenarioResponse(userText, partnerConfig) {
+      const lower = userText.toLowerCase();
+
+      // Check if user is asking in English or requesting help/explanation
+      const isEnglishQuery = /how\s+do|how\s+to|what\s+does|what\s+is|translate|explain|difference|help|stuck|don't\s+know|mean|can\s+you|why/i.test(userText);
+
+      if (isEnglishQuery) {
+        if (lower.includes('quality') || lower.includes('style') || lower.includes('质量') || lower.includes('款式')) {
+          return {
+            hanzi: "Great question! 质量 (zhìliàng) means quality (how well-made and durable something is), while 款式 (kuǎnshì) means style or fashion design. You can say: '我觉得衣服的质量比款式更重要，因为耐穿。' (I think quality is more important than style because it is durable.) Now try saying which one you prefer!",
+            pinyin: "zhìliàng ... kuǎnshì ... Wǒ juéde yīfu de zhìliàng bǐ kuǎnshì gèng zhòngyào, yīnwèi nàichuān.",
+            english: "Quality vs Style comparison. 'I think the quality of clothes is more important than style because it's durable.'",
+            feedback: "Quality vs. Style is a classic high-scoring comparison question for your Unit 1 oral exam!"
+          };
+        } else if (lower.includes('discount') || lower.includes('bargain') || lower.includes('打折') || lower.includes('cheap') || lower.includes('price') || lower.includes('价格')) {
+          return {
+            hanzi: "To ask for a discount, use 打折 (dǎzhé)! For example: '请问这件外套打折吗？' (Excuse me, is this jacket discounted?) Or to ask for a cheaper price: '老板，如果我买两件，可以算便宜一点吗？' (Boss, if I buy two, can you give me a discount?) Try asking that!",
+            pinyin: "Qǐngwèn zhè jiàn wàitào dǎzhé ma? ... Lǎobǎn, rúguǒ wǒ mǎi liǎng jiàn, kěyǐ suàn piányi yìdiǎnr ma?",
+            english: "Asking for discounts in Chinese using 打折 (dǎzhé) and 便宜 (piányi).",
+            feedback: "Remember: '打八折' means 20% off (you pay 80% of the price)!"
+          };
+        } else if (lower.includes('scarf') || lower.includes('silk') || lower.includes('mom') || lower.includes('mother') || lower.includes('丝巾') || lower.includes('礼物')) {
+          return {
+            hanzi: "The word for silk scarf is 丝巾 (sījīn), and real silk is 纯真丝 (chún zhēnsī). You can say: '母亲节我想给妈妈买一条高质量的纯真丝丝巾。' (For Mother's Day, I want to buy a high-quality pure silk scarf for mom.) Where do you plan to buy it?",
+            pinyin: "sījīn ... chún zhēnsī ... Mǔqīnjié wǒ xiǎng gěi māma mǎi yì tiáo gāo zhìliàng de chún zhēnsī sījīn.",
+            english: "Buying a Mother's Day gift: 'For Mother's Day, I want to buy a high-quality pure silk scarf for mom.'",
+            feedback: "The measure word for scarves and pants is 条 (tiáo)!"
+          };
+        } else if (lower.includes('compare') || lower.includes('比') || lower.includes('orchard') || lower.includes('mall') || lower.includes('商场')) {
+          return {
+            hanzi: "To compare two places, use the '比' (bǐ) pattern: A + 比 + B + 更 + Adjective. You can say: '乌节路的商场比其他商场更大，而且为顾客提供了更多选择。' (Orchard Road malls are bigger than other malls, and provide more choices.) Which mall is your favorite?",
+            pinyin: "Wūjiélù de shāngchǎng bǐ qítā shāngchǎng gèng dà, érqiě wèi gùkè tígōng le gèng duō xuǎnzé.",
+            english: "Comparison structure using 比 (A比B更...): 'Orchard Road malls are bigger than others and offer more choices.'",
+            feedback: "A + 比 + B + 更 + Adjective is an essential Intermediate II sentence structure!"
+          };
+        } else {
+          return {
+            hanzi: "没关系，Connor! I'm here to help in English and Chinese. You can answer: '在新加坡，我最常常去乌节路的商场购物，因为那里很方便。' (In Singapore, I most often go to Orchard Road malls to shop because it's very convenient.) Try reading that, or tell me where you like to go!",
+            pinyin: "Zài Xīnjiāpō, wǒ zuì chángcháng qù Wūjiélù de shāngchǎng gòuwù, yīnwèi nàlǐ hěn fāngbiàn.",
+            english: "In Singapore, I most often go to Orchard Road malls to shop because it's very convenient.",
+            feedback: "You can ask for vocabulary, translations, or grammar explanations in English anytime!"
+          };
+        }
+      }
+
+      // Persona-based Chinese contextual responses:
+      if (currentPartnerPersona === 'teacher') {
+        if (userText.includes('乌节路') || userText.includes('商场') || userText.includes('Orchard')) {
+          return {
+            hanzi: "乌节路确实是新加坡最繁华的购物中心！商场不但很大，而且为顾客提供了很多各种各样的选择。如果在那里买东西，你觉得质量重要还是款式重要？",
+            pinyin: "Wūjiélù quèshí shì Xīnjiāpō zuì fánhuá de gòuwù zhōngxīn! Shāngchǎng búdàn hěn dà, érqiě wèi gùkè tígōng le hěn duō gèzhǒng gèyàng de xuǎnzé. Rúguǒ zài nàlǐ mǎi dōngxi, nǐ juéde zhìliàng zhòngyào háishi kuǎnshì zhòngyào?",
+            english: "Orchard Road is indeed Singapore's most bustling shopping center! The malls are not only large but provide all kinds of choices. When shopping there, do you think quality or style is more important?",
+            feedback: "Great mention of shopping location! Try answering with '质量比款式更重要' (quality is more important than style)."
+          };
+        } else if (userText.includes('妈妈') || userText.includes('丝巾') || userText.includes('母亲节')) {
+          return {
+            hanzi: "给妈妈送丝巾非常有孝心！虽然丝巾的价格可能有点贵，但最重要的是表达你的心意。母亲节那天，你打算什么时候送给她？",
+            pinyin: "Gěi māma sòng sījīn fēicháng yǒu xiàoxīn! Suīrán sījīn de jiàgé kěnéng yǒudiǎnr guì, dàn zuì zhòngyào de shì biǎodá nǐ de xīnyì. Mǔqīnjié nà tiān, nǐ dǎsuàn shénme shíhou sòng gěi tā?",
+            english: "Giving a silk scarf to your mom is very thoughtful! Although the scarf price might be a bit high, the most important thing is expressing your kind regard. On Mother's Day, when do you plan to give it to her?",
+            feedback: "Wonderful connection to the Mother's Day topic! Remember to describe why mom will love it."
+          };
+        } else if (userText.includes('质量') || userText.includes('款式') || userText.includes('耐穿')) {
+          return {
+            hanzi: "说得非常好！如果质量不好，衣服穿几次就会坏掉。所以舒适合身的质量比时髦的款式更重要。你平时买衣服会自己做决定吗？",
+            pinyin: "Shuō de fēicháng hǎo! Rúguǒ zhìliàng bù hǎo, yīfu chuān jǐ cì jiù huì huài diào. Suǒyǐ shūfu héshēn de zhìliàng bǐ shímáo de kuǎnshì gèng zhòngyào. Nǐ píngshí mǎi yīfu huì zìjǐ zuò juédìng ma?",
+            english: "Very well said! If quality is poor, clothes break after a few wears. Comfortable quality is more important than trendy styles. Do you usually make decisions yourself when buying clothes?",
+            feedback: "Excellent comparison! That's a classic B+/A response structure for Ms. Wang's rubric."
+          };
+        } else {
+          return {
+            hanzi: "很有意思的想法！在口语考试中，你可以多用一些连接词，比如“虽然…但是…”或者“不但…而且…”。你可以问我英文，或者试着说：'虽然价格有点贵，但是我很喜欢。'",
+            pinyin: "Hěn yǒu yìsi de xiǎngfǎ! ... Nǐ kěyǐ wèn wǒ yīngwén, huòzhě shìzhe shuō: 'Suīrán jiàgé yǒudiǎnr guì, dànshì wǒ hěn xǐhuan.'",
+            english: "Interesting idea! In the oral exam, try using connectors like 虽然...但是... You can ask me in English or try saying: 'Although the price is a bit high, I like it.'",
+            feedback: "Good response! Feel free to ask questions in English if you need vocabulary or hints."
+          };
+        }
+      } else if (currentPartnerPersona === 'classmate') {
+        return {
+          hanzi: "哇，太酷了！乌节路的高岛屋(Takashimaya)确实有很多好看的卫衣。逛完街以后，我们只要穿过马路就能去买珍珠奶茶！If you need any phrases in Chinese just ask me! 你觉得这周六下午怎么样？",
+          pinyin: "Wā, tài kù le! Wūjiélù de Gāodǎowū quèshí yǒu hěn duō hǎokàn de wèiyī. Guàng wán jiē yǐhòu, wǒmen zhǐyào chuānguò mǎlù jiù néng qù mǎi zhēnzhū nǎichá! ... Nǐ juéde zhè zhōuliù xiàwǔ zěnmeyàng?",
+          english: "Wow, so cool! Takashimaya on Orchard Road really has great hoodies. After shopping, as long as we cross the street we can get bubble tea! How does this Saturday afternoon sound?",
+          feedback: "Great natural peer exchange! Notice Xiao Li used '只要...就...' (as long as... then...)."
+        };
+      } else {
+        // Sales Clerk
+        return {
+          hanzi: "这位客人好眼力！这条丝巾是100%纯真丝的，不但摸起来特别柔软，而且款式非常典雅。如果您今天买两条，我可以为您向经理申请打八折优惠！If you want to know about other colors or sizes, please ask! 您觉得怎么样？",
+          pinyin: "Zhè wèi kèrén hǎo yǎnlì! Zhè tiáo sījīn shì bǎi fēn zhī bǎi chún zhēnsī de, búdàn mō qǐlái tèbié róuruǎn, érqiě kuǎnshì fēicháng diǎnyǎ. Rúguǒ nín jīntiān mǎi liǎng tiáo, wǒ kěyǐ wèi nín xiàng jīnglǐ shēnqǐng dǎ bā zhé yōuhuì! ... Nín juéde zěnmeyàng?",
+          english: "You have great taste! This scarf is 100% pure silk, not only feeling soft but very elegant in style. If you buy two today, I can apply for a 20% discount for you! What do you think?",
+          feedback: "The shopkeeper offered a discount! Practice answering with '太好了，我想买一条给妈妈' or asking about payment."
+        };
+      }
+    }
+
+    // Parent Settings Modal Logic
+    function openPartnerSettingsModal() {
+      const modal = document.getElementById('partner-settings-modal');
+      const input = document.getElementById('gemini-api-key-input');
+      const modelSelect = document.getElementById('gemini-model-select');
+      const feedback = document.getElementById('partner-key-test-feedback');
+
+      feedback.innerText = '';
+      const status = getKeyStatusDetails();
+      const savedKey = localStorage.getItem('connor_gemini_api_key') || '';
+      input.value = savedKey;
+
+      if (!savedKey && status.isLoaded && status.source === 'config.js') {
+        input.placeholder = `Active via config.js (${status.maskedKey})`;
+      } else {
+        input.placeholder = "AIzaSy...";
+      }
+
+      modelSelect.value = getResolvedGeminiModel();
+      updateAIStatusUI();
+      modal.classList.remove('hidden');
+    }
+
+    function closePartnerSettingsModal() {
+      document.getElementById('partner-settings-modal').classList.add('hidden');
+      updateAIStatusUI();
+    }
+
+    function clearSavedPartnerKey() {
+      localStorage.removeItem('connor_gemini_api_key');
+      document.getElementById('gemini-api-key-input').value = '';
+      const feedback = document.getElementById('partner-key-test-feedback');
+      const status = getKeyStatusDetails();
+      if (status.isLoaded) {
+        feedback.className = "text-center font-bold text-[11px] text-emerald-600";
+        feedback.innerText = `Browser key cleared. App is now using key from config.js (${status.maskedKey}).`;
+      } else {
+        feedback.className = "text-center font-bold text-[11px] text-amber-600";
+        feedback.innerText = "Browser key removed. Conversation partner is in Offline Scenario Mode.";
+      }
+      updateAIStatusUI();
+    }
+
+    async function testAndSavePartnerKey() {
+      let key = document.getElementById('gemini-api-key-input').value.trim();
+      const model = document.getElementById('gemini-model-select').value;
+      const feedback = document.getElementById('partner-key-test-feedback');
+      const status = getKeyStatusDetails();
+
+      // If user clicked Save/Connect without typing a key, but config.js is loaded, test config.js key!
+      if (!key && status.isLoaded && status.source === 'config.js') {
+        key = status.key;
+      }
+
+      if (!key) {
+        feedback.className = "text-center font-bold text-[11px] text-rose-600";
+        feedback.innerText = "Please enter an API key or configure config.js in the project directory.";
+        return;
+      }
+
+      feedback.className = "text-center font-bold text-[11px] text-slate-500";
+      feedback.innerText = `Testing connection with Google Gemini (${model})...`;
+
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: "Hello" }] }]
+          })
+        });
+
+        if (res.ok) {
+          if (document.getElementById('gemini-api-key-input').value.trim()) {
+            localStorage.setItem('connor_gemini_api_key', key);
+          }
+          localStorage.setItem('connor_gemini_model', model);
+          feedback.className = "text-center font-bold text-[11px] text-emerald-600";
+          feedback.innerText = `✓ Connected successfully! ${model} is active with your loaded key.`;
+          updateAIStatusUI();
+          setTimeout(() => {
+            closePartnerSettingsModal();
+          }, 1200);
+        } else {
+          feedback.className = "text-center font-bold text-[11px] text-rose-600";
+          feedback.innerText = `Connection failed (HTTP ${res.status}). Please check key validity.`;
+        }
+      } catch (e) {
+        if (document.getElementById('gemini-api-key-input').value.trim()) {
+          localStorage.setItem('connor_gemini_api_key', key);
+        }
+        localStorage.setItem('connor_gemini_model', model);
+        feedback.className = "text-center font-bold text-[11px] text-emerald-600";
+        feedback.innerText = "✓ Key saved for browser runtime!";
+        updateAIStatusUI();
+        setTimeout(() => {
+          closePartnerSettingsModal();
+        }, 1200);
+      }
+    }
+
     // Progressive Web App (PWA) Service Worker Registration
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -1867,6 +3146,7 @@
 
     // Run on Page Load
     window.addEventListener('DOMContentLoaded', init);
+    window.addEventListener('load', updateAIStatusUI);
   </script>
 </body>
 </html>

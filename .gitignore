@@ -4,3 +4,4 @@
 *.pdf
 scratch/
 test_*.js
+config.js
