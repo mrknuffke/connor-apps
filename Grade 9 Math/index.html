@@ -34,6 +34,9 @@
     })();
   </script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Local Config for AI Features (Untracked) -->
+  <script src="../config.js"></script>
+  <script src="config.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
@@ -248,6 +251,10 @@
 
       <!-- Quick Actions & Stats -->
       <div class="flex items-center gap-2">
+        <span id="math-ai-status-pill" class="hidden sm:flex text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 px-2.5 py-1 rounded-xl items-center gap-1.5 font-medium" title="AI Socratic Tutor Active">
+          <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+          <span id="math-ai-status-text">AI Socratic Tutor</span>
+        </span>
         <span id="mastery-pill" class="hidden sm:flex text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 px-2.5 py-1 rounded-xl items-center gap-1.5 font-medium">
           <i class="fa-solid fa-trophy text-amber-500 dark:text-amber-400"></i>
           <span id="mastery-text">Best Quiz: None yet</span>
@@ -783,6 +790,19 @@
           <!-- Sub-questions inputs -->
           <div class="mt-6 space-y-4" id="quiz-inputs-wrap">
             <!-- Dynamically populated parts -->
+          </div>
+
+          <!-- Socratic Hint Bar -->
+          <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <button onclick="requestQuizSocraticHint()" id="quiz-hint-btn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs font-bold transition shadow-sm">
+                <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                <span id="quiz-hint-btn-label">Need a Socratic Hint?</span>
+              </button>
+              <span class="text-[11px] text-slate-500 dark:text-slate-400">Guiding clue without giving away the answer</span>
+            </div>
+            <div id="quiz-hint-box" class="hidden p-3 rounded-xl bg-amber-50/80 dark:bg-slate-900 border border-amber-200 dark:border-amber-900/50 text-xs text-amber-950 dark:text-amber-200 leading-relaxed shadow-sm">
+            </div>
           </div>
 
           <!-- Bottom Navigation -->
@@ -1765,6 +1785,13 @@
             <i class="fa-solid fa-circle-xmark text-rose-600 text-base"></i> Needs Revision: Remember the Pairing Rule
           </div>
           <p class="text-xs text-rose-900 leading-relaxed">${hint}</p>
+          <div class="pt-2 border-t border-rose-200 dark:border-rose-900/50">
+            <button onclick="requestMatchmakerSocraticHint()" id="matchmaker-hint-btn" class="inline-flex items-center gap-1.5 text-xs font-bold text-rose-800 dark:text-rose-300 hover:underline">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+              <span>Need a Socratic Clue from AI Coach?</span>
+            </button>
+            <div id="matchmaker-socratic-box" class="hidden mt-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 text-xs text-slate-800 dark:text-slate-200 leading-relaxed shadow-sm"></div>
+          </div>
         `;
       }
     }
@@ -2207,6 +2234,13 @@
             <i class="fa-solid fa-circle-exclamation"></i> Look closer at the labels, scales, and intervals!
           </div>
           <p class="leading-relaxed">${scenario.explanation}</p>
+          <div class="pt-2 border-t border-amber-200 dark:border-amber-900/50">
+            <button onclick="requestAuditSocraticHint()" id="audit-hint-btn" class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-900 dark:text-amber-300 hover:underline">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+              <span>Need a Socratic Clue on where to inspect?</span>
+            </button>
+            <div id="audit-socratic-box" class="hidden mt-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800 text-xs text-slate-800 dark:text-slate-200 leading-relaxed shadow-sm"></div>
+          </div>
         `;
       }
     }
@@ -2716,6 +2750,11 @@
         document.getElementById('quiz-next-btn').classList.remove('hidden');
         document.getElementById('quiz-finish-btn').classList.add('hidden');
       }
+
+      const hintBox = document.getElementById('quiz-hint-box');
+      if (hintBox) hintBox.classList.add('hidden');
+      const hintLabel = document.getElementById('quiz-hint-btn-label');
+      if (hintLabel) hintLabel.innerText = "Need a Socratic Hint?";
     }
 
     function toggleTokenHighlight(span) {
@@ -2890,7 +2929,16 @@
             <span>${item.isCorrect ? '<i class="fa-solid fa-check text-emerald-600"></i> Correct' : '<i class="fa-solid fa-xmark text-rose-600"></i> Needs Review'}</span>
           </div>
           <div class="text-slate-600">Your choice: <span class="font-semibold ${item.isCorrect ? 'text-emerald-950' : 'text-rose-950'}">${item.userVal}</span></div>
-          ${!item.isCorrect ? `<div class="text-indigo-900 mt-1 font-semibold">Standard IM1 Answer: ${item.correctVal}</div>` : ''}
+          ${!item.isCorrect ? `
+            <div class="text-indigo-900 dark:text-indigo-300 mt-1 font-semibold">Standard IM1 Answer: ${item.correctVal}</div>
+            <div class="mt-2 pt-2 border-t border-rose-200 dark:border-rose-900/60">
+              <button onclick="requestReviewSocraticNudge(${item.qNum}, '${escapeAttr(item.label)}', '${escapeAttr(item.userVal)}', '${escapeAttr(item.correctVal)}', 'nudge-box-${item.qNum}-${encodeURIComponent(item.label)}')" class="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-white transition">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                <span>Ask AI Socratic Tutor: Why did this happen?</span>
+              </button>
+              <div id="nudge-box-${item.qNum}-${encodeURIComponent(item.label)}" class="hidden mt-2 p-2.5 rounded-lg bg-indigo-50/80 dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 text-[11px] text-slate-800 dark:text-slate-200 leading-relaxed shadow-sm"></div>
+            </div>
+          ` : ''}
         `;
         listEl.appendChild(row);
       });
@@ -2915,6 +2963,225 @@
       updateQuizLaunchpadBadge();
     }
 
+    function escapeAttr(str) {
+      if (!str) return '';
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function getResolvedMathGeminiKey() {
+      const hasConfigKey = typeof window !== 'undefined' && 
+                           window.GEMINI_API_KEY && 
+                           typeof window.GEMINI_API_KEY === 'string' &&
+                           window.GEMINI_API_KEY.trim() !== '' && 
+                           window.GEMINI_API_KEY.trim() !== "YOUR_GEMINI_API_KEY_HERE";
+      if (hasConfigKey) return window.GEMINI_API_KEY.trim();
+
+      try {
+        const localKey = (localStorage.getItem('connor_gemini_api_key') || '').trim();
+        if (localKey && localKey !== "YOUR_GEMINI_API_KEY_HERE") return localKey;
+      } catch (e) {}
+
+      return '';
+    }
+
+    function getResolvedMathGeminiModel() {
+      try {
+        const saved = localStorage.getItem('connor_gemini_model');
+        if (saved && saved !== 'gemini-2.5-flash') return saved;
+      } catch (e) {}
+      return 'gemini-3.8-flash';
+    }
+
+    function updateMathAIStatus() {
+      const key = getResolvedMathGeminiKey();
+      const pill = document.getElementById('math-ai-status-pill');
+      const text = document.getElementById('math-ai-status-text');
+      if (!pill || !text) return;
+      if (key) {
+        pill.className = "hidden sm:flex text-xs bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 px-2.5 py-1 rounded-xl items-center gap-1.5 font-medium";
+        text.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> AI Socratic Tutor Active';
+      } else {
+        pill.className = "hidden sm:flex text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 px-2.5 py-1 rounded-xl items-center gap-1.5 font-medium";
+        text.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> Socratic Rules Active';
+      }
+    }
+
+    async function callMathSocraticAPI(userPrompt) {
+      const key = getResolvedMathGeminiKey();
+      if (!key) throw new Error("No Gemini API key available");
+      const model = getResolvedMathGeminiModel();
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: userPrompt }] }]
+        })
+      });
+      if (!response.ok) {
+        throw new Error(`Gemini API error: ${response.status}`);
+      }
+      const data = await response.json();
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+    }
+
+    async function requestQuizSocraticHint() {
+      if (quizActiveQuestions.length === 0) return;
+      const q = quizActiveQuestions[currentQuizIndex];
+      const box = document.getElementById('quiz-hint-box');
+      const btn = document.getElementById('quiz-hint-btn');
+      const label = document.getElementById('quiz-hint-btn-label');
+      if (!box || !btn) return;
+
+      box.classList.remove('hidden');
+      box.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5 text-amber-500"></i> Thinking of a Socratic hint...`;
+
+      const key = getResolvedMathGeminiKey();
+      if (key) {
+        try {
+          const prompt = `You are a supportive, insightful Grade 9 Math tutor coaching Connor Knuffke on Integrated Math 1 (One-Variable Statistics).
+
+Current Problem Prompt:
+"${q.promptText}"
+
+Available Question Fields:
+${q.fields.map(f => `- ${f.label}`).join('\n')}
+
+INSTRUCTIONS:
+Give a single concise, guiding Socratic question or conceptual clue (maximum 2 sentences) that helps Connor think through the mathematical concept WITHOUT giving away the correct answer or specific choice. Prompt him on whether the distribution is skewed or symmetric, which measures are resistant to outliers, or how to check the axis/units. Do NOT state the answer.`;
+
+          const hintText = await callMathSocraticAPI(prompt);
+          if (hintText) {
+            box.innerHTML = `
+              <div class="flex items-start gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500 mt-0.5 shrink-0"></i>
+                <div>
+                  <strong>Socratic Clue:</strong> ${hintText}
+                </div>
+              </div>
+            `;
+            if (label) label.innerText = "Hint Provided";
+            return;
+          }
+        } catch (e) {
+          console.warn("AI hint generation failed, using rule engine:", e);
+        }
+      }
+
+      // Offline deterministic fallback
+      let fallbackClue = "Remember to inspect whether the distribution has extreme values or a long tail. For skewed data, extreme values pull the mean, so use resistant measures (Median & IQR). For balanced, symmetric data, use Mean & Standard Deviation.";
+      if (q.promptText.toLowerCase().includes("outlier") || q.promptText.toLowerCase().includes("1.5")) {
+        fallbackClue = "Outlier Rule: Calculate the fences using Q1 - 1.5×IQR and Q3 + 1.5×IQR. Any points strictly outside these fences count as outliers!";
+      } else if (q.promptText.toLowerCase().includes("box")) {
+        fallbackClue = "Boxplot Anatomy: The box encompasses Q1 to Q3 (the middle 50% or IQR). The line inside is the Median. Compare whisker lengths to detect skewness!";
+      }
+      box.innerHTML = `
+        <div class="flex items-start gap-2">
+          <i class="fa-solid fa-lightbulb text-amber-500 mt-0.5 shrink-0"></i>
+          <div>
+            <strong>Rule Anchor:</strong> ${fallbackClue}
+          </div>
+        </div>
+      `;
+      if (label) label.innerText = "Hint Provided";
+    }
+
+    async function requestReviewSocraticNudge(qNum, label, userVal, correctVal, boxId) {
+      const box = document.getElementById(boxId);
+      if (!box) return;
+      box.classList.remove('hidden');
+      box.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5 text-indigo-500"></i> Formulating Socratic breakdown...`;
+
+      const key = getResolvedMathGeminiKey();
+      if (key) {
+        try {
+          const prompt = `You are an encouraging, expert Grade 9 Math tutor coaching Connor Knuffke on Integrated Math 1 (One-Variable Statistics).
+
+Connor missed this question on his quiz:
+Topic / Label: ${label}
+Connor's Chosen Answer: "${userVal}"
+Correct IM1 Standard Answer: "${correctVal}"
+
+INSTRUCTIONS:
+In 2 concise, supportive sentences, explain the conceptual difference between Connor's choice and the correct concept. Explain WHY the correct concept applies (e.g. resistant vs non-resistant measures, skewed vs symmetric, outlier sensitivity). Give him an easy-to-remember rule of thumb for his upcoming reassessment.`;
+
+          const explanation = await callMathSocraticAPI(prompt);
+          if (explanation) {
+            box.innerHTML = `
+              <div class="flex items-start gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500 mt-0.5 shrink-0"></i>
+                <div>
+                  <strong class="text-indigo-900 dark:text-indigo-300">Tutor Insight:</strong> ${explanation}
+                </div>
+              </div>
+            `;
+            return;
+          }
+        } catch (e) {
+          console.warn("AI review nudge failed, using rule engine:", e);
+        }
+      }
+
+      // Offline deterministic fallback
+      box.innerHTML = `
+        <div class="flex items-start gap-2">
+          <i class="fa-solid fa-circle-info text-indigo-500 mt-0.5 shrink-0"></i>
+          <div>
+            <strong class="text-indigo-900 dark:text-indigo-300">IM1 Pairing Principle:</strong>
+            Because the standard choice is <strong>${correctVal}</strong>, remember the golden pairing rule: Symmetric distributions pair <em>Mean with Standard Deviation</em>. Skewed distributions or datasets with outliers pair <em>Median with IQR</em> because they resist extreme distortions.
+          </div>
+        </div>
+      `;
+    }
+
+    async function requestMatchmakerSocraticHint() {
+      const box = document.getElementById('matchmaker-socratic-box');
+      if (!box) return;
+      box.classList.remove('hidden');
+      box.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5 text-indigo-500"></i> Getting Socratic clue...`;
+
+      const scenario = currentMatchActiveData;
+      const key = getResolvedMathGeminiKey();
+      if (key && scenario) {
+        try {
+          const prompt = `You are a Grade 9 Math tutor helping Connor on Center and Spread pairing. The distribution shape is "${scenario.shapeType}" with features: "${scenario.outlierDesc}".
+In 2 friendly sentences, give a Socratic clue asking him to consider how the outlier or shape affects the mean vs median, guiding him to the proper pairing. Do not just hand over the answer.`;
+          const clue = await callMathSocraticAPI(prompt);
+          if (clue) {
+            box.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-amber-500 mr-1.5"></i> <strong>Socratic Clue:</strong> ${clue}`;
+            return;
+          }
+        } catch (e) {}
+      }
+
+      box.innerHTML = `<i class="fa-solid fa-lightbulb text-amber-500 mr-1.5"></i> <strong>Socratic Clue:</strong> If there are extreme values or an uneven tail, think: which measure of center is resistant and ignores the extreme pull?`;
+    }
+
+    async function requestAuditSocraticHint() {
+      const box = document.getElementById('audit-socratic-box');
+      if (!box) return;
+      box.classList.remove('hidden');
+      box.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5 text-indigo-500"></i> Inspecting graphic...`;
+
+      const scenario = currentAuditActiveData || auditScenarios[currentAuditIndex];
+      const key = getResolvedMathGeminiKey();
+      if (key && scenario) {
+        try {
+          const prompt = `You are an expert Math teacher coaching Connor on auditing student statistical graphs (Boxplots and Histograms).
+The graph scenario is "${scenario.title}" of type "${scenario.type}".
+The errors in the graphic are: ${scenario.errorsPresent.join(', ')}.
+Give a single Socratic inspection question (1-2 sentences) directing Connor's eyes to check one of the flawed aspects (e.g., number line intervals, scale consistency, or axis labels) without bluntly listing all errors.`;
+          const clue = await callMathSocraticAPI(prompt);
+          if (clue) {
+            box.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-amber-500 mr-1.5"></i> <strong>Inspection Clue:</strong> ${clue}`;
+            return;
+          }
+        } catch (e) {}
+      }
+
+      box.innerHTML = `<i class="fa-solid fa-magnifying-glass text-amber-500 mr-1.5"></i> <strong>Inspection Clue:</strong> Check the tick marks along the horizontal axis. Are the increments strictly equal, or did the student jump numbers? Also check if units are clearly labeled!`;
+    }
+
     // Window load initialization
     window.onload = function() {
       updateSoundIcon();
@@ -2923,6 +3190,7 @@
       renderMatchmakerProblem();
       renderGraphAuditScenario();
       updateQuizLaunchpadBadge();
+      updateMathAIStatus();
       // Pacing timer is intentionally NOT started here; starts only upon clicking Begin Mini-Quiz!
     };
   </script>

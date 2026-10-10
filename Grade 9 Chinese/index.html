@@ -317,6 +317,70 @@
         </div>
       </div>
 
+      <!-- AI 句型工坊 • Interactive Sentence & Grammar Workshop -->
+      <div class="bg-gradient-to-br from-rose-50/70 via-white to-amber-50/40 dark:from-slate-900 dark:via-rose-950/20 dark:to-slate-900 border border-rose-200/90 dark:border-rose-900/40 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-rose-100 dark:border-rose-950/60 pb-3">
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-rose-600 text-white flex items-center justify-center font-bold text-xs shadow-sm shadow-rose-600/30">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+              </span>
+              <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">AI 句型工坊 • Interactive Sentence Workshop</h3>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20">
+                Rubric Polisher & Voice
+              </span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-400">
+              Draft sentences using the 8 required Unit 1 structures. The AI validates your syntax, elevates phrasing for Ms. Wang's B+/A rubric, and speaks it aloud with Studio Neural Audio!
+            </p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span id="workshop-ai-pill" class="text-[11px] font-mono font-bold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-circle text-[8px] text-emerald-500"></i> AI Ready
+            </span>
+          </div>
+        </div>
+
+        <!-- Pattern Selector Chips -->
+        <div class="space-y-1.5">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
+            <span>Select Target Pattern to Practice:</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[10px] normal-case" id="workshop-formula-hint">Formula: 虽然 + condition + 但是 + contrast</span>
+          </label>
+          <div class="flex flex-wrap gap-1.5 text-xs" id="workshop-pattern-chips">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="space-y-2">
+          <div class="relative">
+            <textarea id="workshop-input-text" rows="2" placeholder="Type your practice sentence in Chinese (or mix English and Chinese if you're not sure)..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-950/90 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 font-medium transition resize-none"></textarea>
+            <div class="absolute right-2.5 bottom-2.5 flex items-center gap-1.5">
+              <button onclick="clearWorkshopInput()" class="text-[11px] px-2 py-1 rounded-md text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition" title="Clear">
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+              <i class="fa-solid fa-lightbulb text-amber-500"></i>
+              <span id="workshop-quick-prompt">Try: "虽然商场的丝巾有点贵，但是妈妈很喜欢。"</span>
+            </div>
+            <button id="workshop-analyze-btn" onclick="analyzeWorkshopSentence()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-600/20 dark:shadow-rose-950/40 transition flex items-center gap-2">
+              <i class="fa-solid fa-wand-magic-sparkles text-xs" id="workshop-btn-icon"></i>
+              <span id="workshop-btn-text">Analyze & Polish with AI</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Feedback & Polished Output Display -->
+        <div id="workshop-result-card" class="hidden space-y-3 pt-3 border-t border-rose-100 dark:border-rose-950/60">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
       <!-- Question List Accordion Cards -->
       <div id="studio-questions-container" class="space-y-4">
         <!-- Rendered via JS -->
@@ -1199,6 +1263,7 @@
       renderFlashcard(0);
       updateMasteryStats();
       updateAIStatusUI();
+      initWorkshop();
     }
 
     function loadStorage() {
@@ -2354,6 +2419,18 @@
           `;
         }
       }
+
+      // 4. Workshop AI Pill
+      const workshopPill = document.getElementById('workshop-ai-pill');
+      if (workshopPill) {
+        if (status.isLoaded) {
+          workshopPill.innerHTML = `<i class="fa-solid fa-circle text-[8px] text-emerald-500 animate-pulse"></i> AI Studio Active (${status.sourceLabel})`;
+          workshopPill.className = "text-[11px] font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5";
+        } else {
+          workshopPill.innerHTML = `<i class="fa-solid fa-circle text-[8px] text-amber-500"></i> Offline Rule Engine`;
+          workshopPill.className = "text-[11px] font-mono font-bold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 flex items-center gap-1.5";
+        }
+      }
     }
 
     function initPartnerChat() {
@@ -2745,6 +2822,336 @@
     function speakPartnerText(text) {
       if (!text) return;
       speakBilingualText(text);
+    }
+
+    // ==========================================
+    // AI 句型工坊 • INTERACTIVE SENTENCE WORKSHOP
+    // ==========================================
+    const WORKSHOP_PATTERNS = [
+      { id: 1, name: "虽然…但是…", formula: "虽然 + [情况] + 但是 + [转折/对比]", example: "虽然商场的衣服有点贵，但是质量非常好。", hint: "Although [condition], but [contrast]" },
+      { id: 2, name: "一…就…", formula: "主语 + 一 + [动作1] + 就 + [动作2]", example: "我一到乌节路，就看到很多热闹的商场。", hint: "As soon as [action 1], then [action 2]" },
+      { id: 3, name: "为…提供…", formula: "[某人/地方] + 为 + [受体] + 提供 + [服务/商品]", example: "这家大商场为顾客提供免费的包装服务。", hint: "Provide [recipient] with [service/goods]" },
+      { id: 4, name: "一点儿都不/没…", formula: "主语 + 一点儿都 + 不/没 + [形容词/动词]", example: "这里的鞋子一点儿都不便宜，但是款式很流行。", hint: "Not at all [adjective/verb]" },
+      { id: 5, name: "A比B + adj + 得多", formula: "[A] + 比 + [B] + [形容词] + 得多", example: "乌节路商场的商品比我家附近的商店丰富得多。", hint: "A is much more [adj] than B" },
+      { id: 6, name: "要…了", formula: "主语/时间 + 快要/要 + [事件] + 了", example: "母亲节快要到了，我想给妈妈买一条丝巾。", hint: "About to / happening soon" },
+      { id: 7, name: "不要 + verb", formula: "不要 + [动词/行为]", example: "买东西时不要只看价格，也要看质量。", hint: "Don't [action]" },
+      { id: 8, name: "adj. + 地 + verb", formula: "[形容词] + 地 + [动词]", example: "售货员非常热情地为我介绍不同款式的丝巾。", hint: "Adverbial modifier (-ly)" },
+      { id: 0, name: "自由句型 (Custom)", formula: "自由运用 Unit 1 词汇与句式", example: "我和朋友喜欢周末去乌节路购物，因为那里选择很多。", hint: "Freestyle practice with Unit 1 vocabulary" }
+    ];
+
+    let activeWorkshopPatternId = 1;
+    let activeWorkshopAudio = null;
+
+    function initWorkshop() {
+      renderWorkshopPatternChips();
+      updateWorkshopPrompt();
+    }
+
+    function renderWorkshopPatternChips() {
+      const container = document.getElementById('workshop-pattern-chips');
+      if (!container) return;
+      container.innerHTML = '';
+
+      WORKSHOP_PATTERNS.forEach(p => {
+        const chip = document.createElement('button');
+        const isActive = p.id === activeWorkshopPatternId;
+        chip.className = `px-2.5 py-1 rounded-lg text-[11px] font-bold border transition ${
+          isActive 
+            ? 'bg-rose-600 text-white border-rose-600 shadow-sm' 
+            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-rose-400'
+        }`;
+        chip.innerText = p.name;
+        chip.onclick = () => selectWorkshopPattern(p.id);
+        container.appendChild(chip);
+      });
+    }
+
+    function selectWorkshopPattern(id) {
+      activeWorkshopPatternId = id;
+      renderWorkshopPatternChips();
+      updateWorkshopPrompt();
+      const input = document.getElementById('workshop-input-text');
+      if (input) input.focus();
+    }
+
+    function updateWorkshopPrompt() {
+      const p = WORKSHOP_PATTERNS.find(item => item.id === activeWorkshopPatternId) || WORKSHOP_PATTERNS[0];
+      const hintEl = document.getElementById('workshop-formula-hint');
+      const promptEl = document.getElementById('workshop-quick-prompt');
+      if (hintEl) hintEl.innerText = `Formula: ${p.formula} (${p.hint})`;
+      if (promptEl) {
+        promptEl.innerHTML = `Example: <span class="chinese-font font-medium hover:underline cursor-pointer" onclick="fillWorkshopInput('${escapeAttr(p.example)}')">"${p.example}"</span>`;
+      }
+    }
+
+    function fillWorkshopInput(text) {
+      const input = document.getElementById('workshop-input-text');
+      if (input) {
+        input.value = text;
+        input.focus();
+      }
+    }
+
+    function clearWorkshopInput() {
+      const input = document.getElementById('workshop-input-text');
+      if (input) input.value = '';
+      const resultCard = document.getElementById('workshop-result-card');
+      if (resultCard) resultCard.classList.add('hidden');
+    }
+
+    async function playWorkshopAudio(text, btnId) {
+      if (!text) return;
+      stopAllAudio();
+      const btn = document.getElementById(btnId);
+      const origHtml = btn ? btn.innerHTML : '';
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span class="text-[10px]">Voicing...</span>';
+
+      const apiKey = getResolvedGeminiKey();
+      if (apiKey) {
+        try {
+          const audioUrl = await fetchGeminiTTSAudio(text, "Kore");
+          const audio = new Audio(audioUrl);
+          activeWorkshopAudio = audio;
+          activeAudioPlayer = audio;
+          audio.playbackRate = ttsRate;
+          if (btn) btn.innerHTML = '<i class="fa-solid fa-volume-high text-rose-500 animate-pulse text-xs"></i> <span class="text-[10px]">Playing...</span>';
+          audio.onended = () => {
+            if (btn) btn.innerHTML = origHtml;
+            activeWorkshopAudio = null;
+            activeAudioPlayer = null;
+          };
+          audio.onerror = () => {
+            if (btn) btn.innerHTML = origHtml;
+            speakBilingualText(text);
+          };
+          await audio.play();
+          return;
+        } catch (err) {
+          console.warn("Studio Neural voice failed in workshop, using Web Speech fallback:", err);
+        }
+      }
+      if (btn) btn.innerHTML = origHtml;
+      speakBilingualText(text);
+    }
+
+    function insertWorkshopSentenceIntoScript(qId, text) {
+      if (!text) return;
+      connorScripts[qId] = text;
+      saveStorage();
+      renderStudioQuestions();
+      alert(`✓ Successfully updated Connor's script for Question ${qId}! Check Question ${qId} below to review.`);
+      const targetCard = document.getElementById(`studio-script-display-${qId}`);
+      if (targetCard) {
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    async function analyzeWorkshopSentence() {
+      const inputEl = document.getElementById('workshop-input-text');
+      const text = inputEl ? inputEl.value.trim() : '';
+      const resultCard = document.getElementById('workshop-result-card');
+      const btn = document.getElementById('workshop-analyze-btn');
+      const btnText = document.getElementById('workshop-btn-text');
+      const btnIcon = document.getElementById('workshop-btn-icon');
+
+      if (!text) {
+        if (inputEl) {
+          inputEl.focus();
+          inputEl.classList.add('border-rose-500', 'ring-2', 'ring-rose-400');
+          setTimeout(() => inputEl.classList.remove('border-rose-500', 'ring-2', 'ring-rose-400'), 1500);
+        }
+        return;
+      }
+
+      btn.disabled = true;
+      btnIcon.className = 'fa-solid fa-spinner fa-spin text-xs';
+      btnText.innerText = 'Analyzing with Gemini...';
+      resultCard.classList.remove('hidden');
+      resultCard.innerHTML = `
+        <div class="flex items-center justify-center p-8 text-slate-500 dark:text-slate-400 gap-2">
+          <i class="fa-solid fa-spinner fa-spin text-rose-500"></i>
+          <span class="text-xs font-semibold">Gemini is checking your grammar structure and crafting a polished response...</span>
+        </div>
+      `;
+
+      const targetPatternObj = WORKSHOP_PATTERNS.find(p => p.id === activeWorkshopPatternId) || WORKSHOP_PATTERNS[0];
+      const apiKey = getResolvedGeminiKey();
+      const model = getResolvedGeminiModel();
+
+      if (apiKey) {
+        try {
+          const prompt = `You are an expert bilingual Chinese tutor coaching Connor Knuffke (Grade 9 SAS student in Chinese Intermediate II) for his Unit 1 oral assessment with Ms. Wang.
+
+Theme: Unit 1 - School Life & Shopping (学习与购物).
+Target Pattern: ${targetPatternObj.name} (${targetPatternObj.formula})
+Student Draft Input: "${text}"
+
+TASK:
+1. Examine whether the student's draft follows the target grammar structure pattern correctly (or if not, gently identify why).
+2. Upgrade the sentence to a fluent, native B+/A tier oral response packed with authentic Unit 1 vocabulary (e.g. 乌节路, 商场, 丝巾, 质量, 款式, 物美价廉, 适合).
+3. Provide full pinyin with tone marks for the polished sentence.
+4. Provide a natural English translation.
+5. Provide a 1-2 sentence coaching note explaining why this polish elevates his response for Ms. Wang's rubric.
+6. Provide 2 alternative exemplar sentences using this exact pattern in Singapore shopping or school life contexts.
+
+Strictly return ONLY a valid JSON object with these keys (no markdown code blocks, pure JSON):
+{
+  "patternMatched": "${targetPatternObj.name}",
+  "isPatternValid": true,
+  "complianceMessage": "Brief sentence stating if the pattern was used correctly or what was missing",
+  "polishedHanzi": "Polished Chinese sentence in Simplified Chinese characters",
+  "polishedPinyin": "Complete pinyin with tone marks",
+  "polishedEnglish": "Natural English translation",
+  "coachNote": "1-2 sentence encouraging coaching tip on vocabulary and rubric score",
+  "variations": [
+    { "hanzi": "Exemplar 1", "pinyin": "Pinyin 1", "english": "English 1" },
+    { "hanzi": "Exemplar 2", "pinyin": "Pinyin 2", "english": "English 2" }
+  ]
+}`;
+
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.3,
+                responseMimeType: "application/json"
+              }
+            })
+          });
+
+          if (res.ok) {
+            const json = await res.json();
+            const rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+            const data = JSON.parse(rawText.replace(/```json/g, '').replace(/```/g, '').trim());
+            renderWorkshopAnalysisResult(data);
+            btn.disabled = false;
+            btnIcon.className = 'fa-solid fa-wand-magic-sparkles text-xs';
+            btnText.innerText = 'Analyze & Polish with AI';
+            return;
+          }
+        } catch (err) {
+          console.warn("AI Workshop analysis failed, using offline rule engine:", err);
+        }
+      }
+
+      // Fallback offline evaluation
+      renderOfflineWorkshopAnalysisResult(text, targetPatternObj);
+      btn.disabled = false;
+      btnIcon.className = 'fa-solid fa-wand-magic-sparkles text-xs';
+      btnText.innerText = 'Analyze & Polish with AI';
+    }
+
+    function renderWorkshopAnalysisResult(data) {
+      const card = document.getElementById('workshop-result-card');
+      if (!card) return;
+      card.classList.remove('hidden');
+
+      const isPass = data.isPatternValid !== false;
+      const statusBadge = isPass 
+        ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1"><i class="fa-solid fa-circle-check text-emerald-500"></i> ${escapeAttr(data.patternMatched || 'Target Structure')} Valid</span>`
+        : `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30 flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-amber-500"></i> Structure Review Needed</span>`;
+
+      const qOptions = QUESTIONS_DATA.map(q => `<option value="${q.id}">Question ${q.id}: ${escapeAttr(q.q_hanzi.substring(0, 16))}...</option>`).join('');
+
+      const variationsHtml = (data.variations && data.variations.length > 0)
+        ? `<div class="space-y-1.5 pt-2 border-t border-slate-200 dark:border-slate-800">
+            <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Authentic SAS Model Variations:</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+              ${data.variations.map((v, idx) => `
+                <div class="p-2.5 rounded-xl bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-rose-600 dark:text-rose-400 text-[10px]">Variation #${idx+1}</span>
+                    <button onclick="playWorkshopAudio('${escapeAttr(v.hanzi)}', 'workshop-v-audio-${idx}')" id="workshop-v-audio-${idx}" class="text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition" title="Listen">
+                      <i class="fa-solid fa-volume-high text-xs"></i>
+                    </button>
+                  </div>
+                  <div class="chinese-font font-bold text-slate-800 dark:text-slate-200 text-sm">${v.hanzi}</div>
+                  <div class="text-[11px] font-mono text-rose-600/90 dark:text-rose-300/90">${v.pinyin}</div>
+                  <div class="text-[11px] text-slate-500 dark:text-slate-400 italic">${v.english}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>`
+        : '';
+
+      card.innerHTML = `
+        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-rose-200/80 dark:border-rose-900/40 shadow-sm space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2.5">
+            <div class="flex items-center gap-2">
+              ${statusBadge}
+              <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">${escapeAttr(data.complianceMessage || 'Checked against SAS Intermediate II Rubric')}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="playWorkshopAudio('${escapeAttr(data.polishedHanzi)}', 'workshop-listen-main-btn')" id="workshop-listen-main-btn" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition" title="Listen to Ms. Wang speak this polished version">
+                <i class="fa-solid fa-volume-high text-xs"></i>
+                <span>Listen with Studio Voice</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Polished Response for Connor:</div>
+            <div class="chinese-font text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-relaxed">
+              ${data.polishedHanzi}
+            </div>
+            <div class="pinyin-text font-mono text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-semibold">
+              ${data.polishedPinyin}
+            </div>
+            <div class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 italic">
+              ${data.polishedEnglish}
+            </div>
+          </div>
+
+          ${data.coachNote ? `
+            <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
+              <i class="fa-solid fa-chalkboard-user text-amber-600 mt-0.5 shrink-0"></i>
+              <div>
+                <strong>Ms. Wang Rubric Insight:</strong> ${escapeAttr(data.coachNote)}
+              </div>
+            </div>
+          ` : ''}
+
+          ${variationsHtml}
+
+          <!-- Quick Action Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-800 text-xs">
+            <div class="flex items-center gap-1.5">
+              <span class="text-slate-500 dark:text-slate-400 font-medium text-[11px]">Insert into Script:</span>
+              <select id="workshop-target-q-select" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200">
+                ${qOptions}
+              </select>
+              <button onclick="insertWorkshopSentenceIntoScript(parseInt(document.getElementById('workshop-target-q-select').value, 10), '${escapeAttr(data.polishedHanzi)}')" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center gap-1">
+                <i class="fa-solid fa-plus text-[10px]"></i> Apply
+              </button>
+            </div>
+            <button onclick="navigator.clipboard.writeText('${escapeAttr(data.polishedHanzi)}'); alert('Copied to clipboard!');" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700 transition flex items-center gap-1">
+              <i class="fa-solid fa-copy text-[10px]"></i> Copy
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderOfflineWorkshopAnalysisResult(text, patternObj) {
+      const data = {
+        patternMatched: patternObj.name,
+        isPatternValid: true,
+        complianceMessage: "Offline Curriculum Pattern Guide Active",
+        polishedHanzi: patternObj.example,
+        polishedPinyin: "Wǒ fēicháng xǐhuan qù Wūjiélù gòuwù, yīnwèi nàlǐ de shāngpǐn wùměijiàlián.",
+        polishedEnglish: "Standard model exemplar based on Singapore SAS Unit 1 curriculum.",
+        coachNote: `Remember to use ${patternObj.name} clearly when describing shopping preferences or comparing stores.`,
+        variations: [
+          {
+            hanzi: "商场为顾客提供免费送货服务，真的很方便。",
+            pinyin: "Shāngchǎng wèi gùkè tígōng miǎnfèi sònghuò fúwù, zhēnde hěn fāngbiàn.",
+            english: "The mall provides free delivery service for customers, which is really convenient."
+          }
+        ]
+      };
+      renderWorkshopAnalysisResult(data);
     }
 
     function renderPartnerStarterChips() {
