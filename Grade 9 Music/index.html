@@ -1656,27 +1656,27 @@
       const stepX = 20;
 
       // Positions (y values) - topY = 60, lineSpacing = 16, bottomLineY = 124
-      // Treble Clef sharps: F5 (Line 5, y=60), C5 (Space 3, y=84), G5 (Space above, y=52), D5 (Line 4, y=76), A4 (Space 2, y=100)
-      const trebleSharpY = [60, 84, 52, 76, 100];
-      // Treble Clef flats: B4 (Line 3, y=92), E5 (Space 4, y=68), A4 (Space 2, y=100), D5 (Line 4, y=76)
-      const trebleFlatY = [92, 68, 100, 76];
+      // Treble Clef sharps: F5 (Line 5, y=60), C5 (Space 3, y=84), G5 (Space above, y=52), D5 (Line 4, y=76), A4 (Space 2, y=100), E5 (Space 4, y=68), B4 (Line 3, y=92)
+      const trebleSharpY = [60, 84, 52, 76, 100, 68, 92];
+      // Treble Clef flats: B4 (Line 3, y=92), E5 (Space 4, y=68), A4 (Space 2, y=100), D5 (Line 4, y=76), G4 (Line 2, y=108), C5 (Space 3, y=84), F4 (Line 1, y=124)
+      const trebleFlatY = [92, 68, 100, 76, 108, 84, 124];
 
-      // Bass Clef sharps: F4 (Line 4, y=76), C3 (Space 2, y=100), G3 (Space 4, y=68), D3 (Line 3, y=84)
-      const bassSharpY = [76, 100, 68, 84];
-      // Bass Clef flats: B2 (Line 2, y=108), E3 (Space 3, y=84), A2 (Line 1, y=124), D3 (Line 3, y=92)
-      const bassFlatY = [108, 84, 124, 92];
+      // Bass Clef sharps: F3 (Line 4, y=76), C3 (Space 2, y=100), G3 (Space 4, y=68), D3 (Line 3, y=92), A2 (Space 1, y=116), E3 (Space 3, y=84), B2 (Line 2, y=108)
+      const bassSharpY = [76, 100, 68, 92, 116, 84, 108];
+      // Bass Clef flats: B2 (Line 2, y=108), E3 (Space 3, y=84), A2 (Space 1, y=116), D3 (Line 3, y=92), G2 (Line 1, y=124), C3 (Space 2, y=100), F2 (Space below, y=132)
+      const bassFlatY = [108, 84, 116, 92, 124, 100, 132];
 
       if (currentKeyQuiz.sharps > 0) {
         const yList = keySigClef === 'treble' ? trebleSharpY : bassSharpY;
         for (let i = 0; i < currentKeyQuiz.sharps; i++) {
           const y = yList[i] || 76;
-          svg += `<text x="${startX + i * stepX}" y="${y + 7}" fill="${accidentalColor}" font-size="28" font-weight="bold" font-family="'Plus Jakarta Sans', serif">♯</text>`;
+          svg += `<text x="${startX + i * stepX}" y="${y + 11.5}" fill="${accidentalColor}" font-size="28" font-weight="bold" font-family="'Plus Jakarta Sans', serif">♯</text>`;
         }
       } else if (currentKeyQuiz.flats > 0) {
         const yList = keySigClef === 'treble' ? trebleFlatY : bassFlatY;
         for (let i = 0; i < currentKeyQuiz.flats; i++) {
           const y = yList[i] || 84;
-          svg += `<text x="${startX + i * stepX}" y="${y + 5}" fill="${accidentalColor}" font-size="28" font-weight="bold" font-family="'Plus Jakarta Sans', serif">♭</text>`;
+          svg += `<text x="${startX + i * stepX}" y="${y + 9}" fill="${accidentalColor}" font-size="28" font-weight="bold" font-family="'Plus Jakarta Sans', serif">♭</text>`;
         }
       } else {
         // C Major (No sharps or flats)
@@ -2122,14 +2122,14 @@
         const yList = (activeScaleClef === 'treble') ? trebleSharpY : bassSharpY;
         for (let s = 0; s < scale.sharps; s++) {
           const sy = yList[s] || 66;
-          svg += `<text x="${sigStartX + s * sigStep}" y="${sy + 7}" fill="${accidentalColor}" font-size="28" font-weight="bold" font-family="'Plus Jakarta Sans', serif">♯</text>`;
+          svg += `<text x="${sigStartX + s * sigStep}" y="${sy + 11.5}" fill="${accidentalColor}" font-size="28" font-weight="bold" font-family="'Plus Jakarta Sans', serif">♯</text>`;
         }
         notesStartX = sigStartX + (scale.sharps * sigStep) + 24;
       } else if (scale.flats > 0) {
         const yList = (activeScaleClef === 'treble') ? trebleFlatY : bassFlatY;
         for (let f = 0; f < scale.flats; f++) {
           const fy = yList[f] || 82;
-          svg += `<text x="${sigStartX + f * sigStep}" y="${fy + 5}" fill="${accidentalColor}" font-size="28" font-weight="bold" font-family="'Plus Jakarta Sans', serif">♭</text>`;
+          svg += `<text x="${sigStartX + f * sigStep}" y="${fy + 9}" fill="${accidentalColor}" font-size="28" font-weight="bold" font-family="'Plus Jakarta Sans', serif">♭</text>`;
         }
         notesStartX = sigStartX + (scale.flats * sigStep) + 24;
       }
