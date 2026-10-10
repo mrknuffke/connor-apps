@@ -2087,6 +2087,7 @@
         role: "新加坡美国学校 (SAS) 华语老师",
         avatar: "👩‍🏫",
         title: "👩‍🏫 Ms. Wang • ILS Oral Exam Rehearsal Coach",
+        voiceName: "Kore",
         desc: "Bilingual Coaching & Oral Exam Rehearsal: Practice Unit 1 topics. Ms. Wang coaches in English, breaks down vocab/grammar, and codeswitches seamlessly into Chinese practice!",
         starters: [
           "在新加坡，我最常常去乌节路的商场购物。",
@@ -2108,6 +2109,7 @@
         role: "SAS 9年级同班同学",
         avatar: "🧑‍🎓",
         title: "🧑‍🎓 Xiao Li • Friendly Peer Chat & Scaffolding",
+        voiceName: "Puck",
         desc: "Casual conversation with classmate Xiao Li. Chat about weekend plans, Takashimaya, or ask Xiao Li in English how to say cool phrases in Chinese.",
         starters: [
           "听说乌节路新开了商场，我们要不要周末一起去？",
@@ -2128,6 +2130,7 @@
         role: "乌节路服装精品店店员",
         avatar: "🏪",
         title: "🏪 Sales Clerk • Singapore Shopping Roleplay",
+        voiceName: "Aoede",
         desc: "Practice realistic shopping dialogue in Chinese: asking about fabric, sizes, comparing styles, and negotiating discounts (打折). Ask questions in English anytime!",
         starters: [
           "请问这条丝巾有什么颜色？我想送给妈妈当礼物。",
@@ -2364,7 +2367,8 @@
         english: config.initial.english,
         feedback: config.initial.feedback,
         avatar: config.avatar,
-        speakerName: config.name
+        speakerName: config.name,
+        voiceName: config.voiceName
       }];
       renderPartnerChatFeed();
       renderPartnerStarterChips();
@@ -2468,9 +2472,9 @@
                 <div class="flex items-center justify-between text-[11px] font-bold text-rose-600 dark:text-rose-400">
                   <span>${msg.speakerName || 'AI Partner'}</span>
                   <div class="flex items-center gap-2">
-                    <button onclick="speakPartnerText('${escapeAttr(msg.hanzi)}')" class="hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1 text-slate-500 dark:text-slate-400" title="Replay spoken audio">
-                      <i class="fa-solid fa-volume-high"></i>
-                      <span class="text-[10px]">Listen</span>
+                    <button onclick="speakPartnerMessage(${msg.id})" id="partner-listen-btn-${msg.id}" class="hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-medium transition" title="Listen with Studio Neural Voice">
+                      <i class="fa-solid fa-volume-high text-xs" id="partner-listen-icon-${msg.id}"></i>
+                      <span class="text-[10px]" id="partner-listen-label-${msg.id}">Listen</span>
                     </button>
                   </div>
                 </div>
@@ -2570,6 +2574,172 @@
         if (voice) utter.voice = voice;
         window.speechSynthesis.speak(utter);
       });
+    }
+
+    // Convert raw 16-bit 24kHz PCM to WAV Data URL (safety wrapper)
+    function pcmBase64ToWavDataUrl(base64Pcm, sampleRate = 24000) {
+      const binaryString = atob(base64Pcm);
+      const pcmLength = binaryString.length;
+      const buffer = new ArrayBuffer(44 + pcmLength);
+      const view = new DataView(buffer);
+      function writeStr(offset, str) {
+        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+      }
+      writeStr(0, 'RIFF');
+      view.setUint32(4, 36 + pcmLength, true);
+      writeStr(8, 'WAVE');
+      writeStr(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeStr(36, 'data');
+      view.setUint32(40, pcmLength, true);
+      const bytes = new Uint8Array(buffer, 44);
+      for (let i = 0; i < pcmLength; i++) bytes[i] = binaryString.charCodeAt(i);
+      const blob = new Blob([buffer], { type: 'audio/wav' });
+      return URL.createObjectURL(blob);
+    }
+
+    // Call Google Gemini gemini-3.8-flash-tts for Studio Neural Bilingual Voice
+    async function fetchGeminiTTSAudio(text, voiceName = "Kore") {
+      const apiKey = getResolvedGeminiKey();
+      if (!apiKey) throw new Error("No Gemini API key available");
+      
+      const cleanSpeechText = text
+        .replace(/[#*_`]/g, '')
+        .replace(/（/g, '(').replace(/）/g, ')')
+        .trim();
+
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-tts:generateContent?key=${apiKey}`;
+      
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Say naturally and warmly as an encouraging bilingual Chinese tutor/partner: ${cleanSpeechText}`
+            }]
+          }],
+          generationConfig: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName: voiceName
+                }
+              }
+            }
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Gemini TTS API error ${response.status}: ${errText}`);
+      }
+
+      const data = await response.json();
+      const inlineData = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+      if (!inlineData || !inlineData.data) {
+        throw new Error("No audio returned from Gemini TTS");
+      }
+
+      if (inlineData.mimeType && inlineData.mimeType.includes('wav')) {
+        return `data:${inlineData.mimeType};base64,${inlineData.data}`;
+      } else {
+        return pcmBase64ToWavDataUrl(inlineData.data, 24000);
+      }
+    }
+
+    // Play Assistant Speech with Neural Studio Voice (cached for instant replays)
+    async function speakPartnerMessage(msgId) {
+      const msg = partnerChatHistory.find(m => m.id === msgId);
+      if (!msg || !msg.hanzi) return;
+
+      stopAllAudio();
+
+      const listenBtn = document.getElementById(`partner-listen-btn-${msgId}`);
+      const listenIcon = document.getElementById(`partner-listen-icon-${msgId}`);
+      const listenLabel = document.getElementById(`partner-listen-label-${msgId}`);
+
+      function setButtonState(state) {
+        if (!listenBtn) return;
+        if (state === 'loading') {
+          if (listenIcon) listenIcon.className = "fa-solid fa-spinner fa-spin text-rose-500 text-xs";
+          if (listenLabel) listenLabel.innerText = "Voicing...";
+          listenBtn.disabled = true;
+        } else if (state === 'playing') {
+          if (listenIcon) listenIcon.className = "fa-solid fa-volume-high text-rose-600 animate-pulse text-xs";
+          if (listenLabel) listenLabel.innerText = "Playing...";
+          listenBtn.disabled = false;
+        } else {
+          if (listenIcon) listenIcon.className = "fa-solid fa-volume-high text-xs";
+          if (listenLabel) listenLabel.innerText = "Listen";
+          listenBtn.disabled = false;
+        }
+      }
+
+      // 1. Instant replay from cache
+      if (msg.audioUrl) {
+        try {
+          setButtonState('playing');
+          const audio = new Audio(msg.audioUrl);
+          activeAudioPlayer = audio;
+          audio.playbackRate = ttsRate;
+          audio.onended = () => {
+            setButtonState('idle');
+            activeAudioPlayer = null;
+          };
+          audio.onerror = () => {
+            setButtonState('idle');
+            speakBilingualText(msg.hanzi);
+          };
+          await audio.play();
+          return;
+        } catch (e) {
+          console.warn("Cached audio playback failed, re-fetching:", e);
+        }
+      }
+
+      // 2. Fetch Neural Studio Voice from Gemini
+      const apiKey = getResolvedGeminiKey();
+      if (apiKey) {
+        try {
+          setButtonState('loading');
+          const persona = PERSONA_CONFIGS[currentPartnerPersona] || PERSONA_CONFIGS.teacher;
+          const voiceName = msg.voiceName || persona.voiceName || 'Kore';
+          
+          const audioUrl = await fetchGeminiTTSAudio(msg.hanzi, voiceName);
+          msg.audioUrl = audioUrl; // Cache data URL
+
+          setButtonState('playing');
+          const audio = new Audio(audioUrl);
+          activeAudioPlayer = audio;
+          audio.playbackRate = ttsRate;
+          audio.onended = () => {
+            setButtonState('idle');
+            activeAudioPlayer = null;
+          };
+          audio.onerror = () => {
+            setButtonState('idle');
+            speakBilingualText(msg.hanzi);
+          };
+          await audio.play();
+          return;
+        } catch (err) {
+          console.warn("Gemini Studio Neural TTS unavailable, falling back to Web Speech:", err);
+          setButtonState('idle');
+        }
+      }
+
+      // 3. Fallback to Web Speech API
+      setButtonState('idle');
+      speakBilingualText(msg.hanzi);
     }
 
     function speakPartnerText(text) {
@@ -2737,22 +2907,24 @@
 
         typingIndicator.classList.add('hidden');
 
+        const newMsgId = Date.now() + 1;
         partnerChatHistory.push({
-          id: Date.now() + 1,
+          id: newMsgId,
           role: 'assistant',
           hanzi: aiResponse.hanzi,
           pinyin: aiResponse.pinyin,
           english: aiResponse.english,
           feedback: aiResponse.feedback,
           avatar: partnerConfig.avatar,
-          speakerName: partnerConfig.name
+          speakerName: partnerConfig.name,
+          voiceName: partnerConfig.voiceName
         });
 
         renderPartnerChatFeed();
 
         // Auto-speak reply
         if (partnerAutoSpeak) {
-          speakPartnerText(aiResponse.hanzi);
+          speakPartnerMessage(newMsgId);
         }
 
       } catch (err) {
@@ -2761,19 +2933,21 @@
 
         // Graceful offline fallback
         const fallback = generateOfflineScenarioResponse(text, partnerConfig);
+        const fallbackMsgId = Date.now() + 1;
         partnerChatHistory.push({
-          id: Date.now() + 1,
+          id: fallbackMsgId,
           role: 'assistant',
           hanzi: fallback.hanzi,
           pinyin: fallback.pinyin,
           english: fallback.english,
           feedback: "Generated using built-in Singapore SAS curriculum scenario engine.",
           avatar: partnerConfig.avatar,
-          speakerName: partnerConfig.name
+          speakerName: partnerConfig.name,
+          voiceName: partnerConfig.voiceName
         });
 
         renderPartnerChatFeed();
-        if (partnerAutoSpeak) speakPartnerText(fallback.hanzi);
+        if (partnerAutoSpeak) speakPartnerMessage(fallbackMsgId);
       }
     }
 
